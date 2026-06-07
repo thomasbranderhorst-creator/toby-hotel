@@ -163,7 +163,7 @@
     <input id="api-key-input" type="password" placeholder="sk-ant-api03-...">
     <div style="display:flex;gap:8px;">
       <button onclick="slaanApiKey()" style="flex:1;background:#7c6ff7;border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:500;color:white;cursor:pointer;">Opslaan in browser</button>
-      <button onclick="document.getElementById('api-setup').style.display='none'" style="background:#1e2230;border:1px solid rgba(255,255,255,0.14);border-radius:7px;padding:10px 16px;font-size:12px;color:#8b90a0;cursor:pointer;">Overslaan</button>
+      <button id="btn-overslaan" style="background:#1e2230;border:1px solid rgba(255,255,255,0.14);border-radius:7px;padding:10px 16px;font-size:12px;color:#8b90a0;cursor:pointer;">Overslaan</button>
     </div>
     <div style="font-size:10px;color:#555c70;margin-top:10px;text-align:center;">Zonder sleutel werkt Vera op bestandsnaamherkenning</div>
   </div>
@@ -248,6 +248,9 @@ let pendingDoc = null;
 
 // ── API Key beheer ──
 function toonApiSetup() {
+  document.getElementById('btn-overslaan').onclick = function() {
+    document.getElementById('api-setup').style.display = 'none';
+  };
   document.getElementById('api-setup').style.display = 'flex';
   document.getElementById('api-key-input').value = ANTHROPIC_KEY || '';
 }
@@ -393,6 +396,8 @@ function setupUpload() {
     if (e.dataTransfer.files[0]) verwerkBestand(e.dataTransfer.files[0]);
   });
   zone.addEventListener('click', () => input.click());
+  const uploadLink = document.getElementById('upload-link');
+  if (uploadLink) uploadLink.addEventListener('click', (e) => { e.stopPropagation(); input.click(); });
   input.addEventListener('change', () => { if (input.files[0]) verwerkBestand(input.files[0]); });
 
   document.getElementById('btn-opslaan').addEventListener('click', slaOp);
@@ -562,7 +567,7 @@ function fileToBase64(file) {
 
 function resetZone() {
   const z = document.getElementById('upload-zone');
-  z.innerHTML = '<div class="upload-icon">&#128229;</div><div class="upload-text">Sleep een bestand hierin of <span style="color:var(--purple);cursor:pointer" onclick="document.getElementById(\'file-input\').click()">klik om te uploaden</span></div>';
+  z.innerHTML = '<div class="upload-icon">&#128229;</div><div class="upload-text">Sleep een bestand hierin of <span style="color:var(--purple);cursor:pointer" id="upload-link">klik om te uploaden</span></div>';
   document.getElementById('file-input').value = '';
 }
 
