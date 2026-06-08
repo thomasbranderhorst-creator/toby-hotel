@@ -170,6 +170,26 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="dagstart-date" id="dagstart-date"></div>
   </div>
 
+  <!-- Status pills -->
+  <div class="status-pills" id="status-pills">
+    <div class="status-pill"><div class="dot" style="background:var(--gray)"></div>Laden...</div>
+  </div>
+
+  <!-- Vandaag kaart met bezettingsgrafiek -->
+  <div class="vandaag-card" id="vandaag-card" style="display:none">
+    <div class="vandaag-header">
+      <div>
+        <div class="vandaag-title">&#128197; Bezetting deze week</div>
+      </div>
+      <div style="text-align:right">
+        <div class="vandaag-bezetting" id="vandaag-pct">—%</div>
+        <div class="vandaag-sub" id="vandaag-sub">vandaag</div>
+      </div>
+    </div>
+    <div class="bez-week" id="bez-week"></div>
+    <div class="signaal-items" id="vandaag-signalen"></div>
+  </div>
+
   <!-- Signalen banner -->
   <div class="signalen-banner" id="signalen-banner">
     <div class="signalen-icon">&#9203;</div>
@@ -350,6 +370,64 @@ async function laadSystemData() {
   shiftbaseData = shift.data || [];
   exactData = exact.data && exact.data[0] ? exact.data[0] : null;
   documentenData = docs.data || [];
+
+  renderVandaagKaart();
+}
+
+function renderVandaagKaart() {
+  if (!mewsData.length) return;
+
+  var vandaag = mewsData[0];
+  var vandaagDatum = new Date().toISOString().split('T')[0];
+  var dagen = ['zo','ma','di','wo','do','vr','za'];
+
+  // Bezettingsgrafiek
+  document.getElementById('vandaag-pct').textContent = vandaag.bezettingsgraad + '%';
+  document.getElementById('vandaag-sub').textContent = vandaag.kamers_bezet + ' van 45 kamers bezet';
+
+  var weekHtml = mewsData.map(function(d, i) {
+    var datum = new Date(d.datum);
+    var dagNaam = dagen[datum.getDay()];
+    var isVandaag = d.datum === vandaagDatum || d.datum.substring(0,10) === vandaagDatum;
+    var hoogte = Math.round(d.bezettingsgraad * 0.46);
+    var klasse = isVandaag ? 'vandaag' : d.bezettingsgraad < 60 ? 'laag' : d.bezettingsgraad < 80 ? 'midden' : 'hoog';
+    return '<div class="bez-dag">' +
+      '<div class="bez-dag-balk-wrap"><div class="bez-dag-balk ' + klasse + '" style="height:' + hoogte + 'px"></div></div>' +
+      '<div class="bez-dag-label" style="' + (isVandaag?'color:var(--purple);font-weight:500':'') + '">' + dagNaam + '</div>' +
+      '<div class="bez-dag-pct">' + Math.round(d.bezettingsgraad) + '%</div>' +
+      '</div>';
+  }).join('');
+
+  document.getElementById('bez-week').innerHTML = weekHtml;
+
+  // Signalen vandaag
+  var signalen = [];
+  // Aankomsten/vertrekken
+  if (vandaag.aankomsten > 0) signalen.push({kleur:'var(--green)', tekst: vandaag.aankomsten + ' aankomsten vandaag'});
+  if (vandaag.vertrekken > 0) signalen.push({kleur:'var(--blue)', tekst: vandaag.vertrekken + ' vertrekken vandaag'});
+  // BHV check
+  var vandaagRooster = shiftbaseData.filter(function(s){ return s.datum && s.datum.substring(0,10) === vandaagDatum; });
+  var bhvVandaag = vandaagRooster.filter(function(s){return s.bhv_gecertificeerd;});
+  if (bhvVandaag.length > 0) {
+    signalen.push({kleur:'var(--green)', tekst:'BHV gedekt — ' + bhvVandaag[0].medewerker_naam});
+  } else if (vandaagRooster.length > 0) {
+    signalen.push({kleur:'var(--coral)', tekst:'Geen BHV vandaag ingeroosterd'});
+  }
+  // Exacte financiën
+  if (exactData) {
+    var budgetPct = Math.round(exactData.omzet_mtd / exactData.omzet_budget * 100);
+    var kleur = budgetPct >= 90 ? 'var(--green)' : budgetPct >= 70 ? 'var(--amber)' : 'var(--coral)';
+    signalen.push({kleur:kleur, tekst:'Omzet MTD: €' + exactData.omzet_mtd.toLocaleString('nl-NL') + ' (' + budgetPct + '% van budget)'});
+    if (exactData.ota_commissie_pct > 17) {
+      signalen.push({kleur:'var(--amber)', tekst:'OTA-commissie ' + exactData.ota_commissie_pct + '% — hoger dan norm'});
+    }
+  }
+
+  document.getElementById('vandaag-signalen').innerHTML = signalen.map(function(s){
+    return '<div class="signaal-item"><div class="signaal-item-dot" style="background:' + s.kleur + ';box-shadow:0 0 5px ' + s.kleur + '40"></div>' + s.tekst + '</div>';
+  }).join('');
+
+  document.getElementById('vandaag-card').style.display = 'block';
 }
 
 function bouwRijkeContext() {
@@ -493,6 +571,32 @@ function updateSignalen() {
   var totaal = complianceData.length;
   var acties = actiesData.length;
 
+  // Status pills
+  var pills = [];
+  // Bezetting vandaag
+  if (mewsData.length > 0) {
+    var pct = mewsData[0].bezettingsgraad;
+    var pillKlasse = pct >= 80 ? 'rood-pill' : pct >= 60 ? 'amber-pill' : 'groen-pill';
+    pills.push('<div class="status-pill ' + pillKlasse + '"><div class="dot"></div>' + pct + '% bezet vandaag</div>');
+  }
+  // Compliance
+  if (rood > 0) {
+    pills.push('<div class="status-pill rood-pill"><div class="dot"></div>' + rood + ' kritieke compliance items</div>');
+  } else if (geen > 0) {
+    pills.push('<div class="status-pill amber-pill"><div class="dot"></div>' + geen + ' compliance items open</div>');
+  } else {
+    pills.push('<div class="status-pill groen-pill"><div class="dot"></div>Compliance in orde</div>');
+  }
+  // Acties
+  if (acties > 0) {
+    pills.push('<div class="status-pill amber-pill"><div class="dot"></div>' + acties + ' open acties</div>');
+  }
+  // Medewerkers
+  pills.push('<div class="status-pill groen-pill"><div class="dot"></div>' + medewData.length + ' medewerkers actief</div>');
+
+  document.getElementById('status-pills').innerHTML = pills.join('');
+
+  // Signalen banner
   var banner = document.getElementById('signalen-banner');
   var tekst = document.getElementById('signalen-tekst');
 
