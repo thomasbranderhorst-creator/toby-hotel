@@ -318,7 +318,7 @@ async function haalNieuws(categorie, zoekterm) {
     '  "vera_signaal": "Wat betekent dit concreet voor Hotel De Klok (1 zin)?",\n' +
     '  "actie_vereist": true of false\n' +
     '}]\n\n' +
-    'Geef 5-8 relevante items. Zorg dat de URLs echt bestaan. Focus op 2025-2026.';
+    'Geef precies 4 relevante items. Zorg dat de URLs echt bestaan. Focus op 2025-2026.';
 
   try {
     var resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -331,7 +331,7 @@ async function haalNieuws(categorie, zoekterm) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 1500,
         tools: [{type: 'web_search_20250305', name: 'web_search'}],
         system: 'Je bent Vera, nieuws-assistent voor hotelmanagers in Nederland. Je zoekt actuele informatie op relevant voor hotels in ' + stad + '. Geef ook lokaal nieuws mee (gemeente ' + stad + ', toeristenbelasting, APV, evenementen). Je antwoordt ALLEEN met een valide JSON array, geen markdown, geen uitleg, geen inleiding.',
         messages: [{role: 'user', content: prompt}]
