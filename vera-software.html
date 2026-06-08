@@ -112,10 +112,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 
   <!-- KPI strip -->
   <div class="kpi-strip">
-    <div class="kpi"><div class="kpi-val">€3.240</div><div class="kpi-lbl">Totaal per maand</div></div>
+    <div class="kpi"><div class="kpi-val">€3.240</div><div class="kpi-lbl">Software per maand</div></div>
     <div class="kpi amber"><div class="kpi-val">2</div><div class="kpi-lbl">Contract verloopt binnenkort</div></div>
     <div class="kpi"><div class="kpi-val">6/9</div><div class="kpi-lbl">Gekoppeld met Vera</div></div>
     <div class="kpi coral"><div class="kpi-val">1</div><div class="kpi-lbl">Mogelijke overlap</div></div>
+  <div style="grid-column:1/-1"><div style="background:var(--bg3);border:1px solid var(--amber-border);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow);font-size:12px;color:var(--text2)">&#128197; <strong style="color:var(--text)">Jaarlijkse kosten: €2.030/jaar</strong> — Buma/Stemra, KHN, Green Key, keuringen. Vera herinnert je 6 weken voor elke vervaldatum.</div></div>
   </div>
 
   <!-- Vera signalen -->
@@ -135,6 +136,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="tab" data-v="pms">PMS & Operatie</div>
     <div class="tab" data-v="revenue">Revenue</div>
     <div class="tab" data-v="overig">Overig</div>
+    <div class="tab" data-v="jaarlijks">Jaarlijks</div>
   </div>
 
   <!-- Totaal breakdown -->
@@ -181,6 +183,14 @@ var softwareData = [
   {naam:'Revinate', cat:'Reputatie & CRM', prijs:290, freq:'mnd', contract:'feb 2027', status:'ok', vera:false, dot:'var(--teal,#1a8c7a)'},
   {naam:'Microsoft 365', cat:'Productiviteit', prijs:28, freq:'mnd', contract:'doorlopend', status:'ok', vera:false, dot:'var(--gray)'},
   {naam:'Wifi provider', cat:'Infrastructuur', prijs:89, freq:'mnd', contract:'jun 2027', status:'ok', vera:false, dot:'var(--gray)'},
+  // Jaarlijks
+  {naam:'Buma/Stemra', cat:'Muziekrechten', prijs:480, freq:'jr', contract:'jan 2027', status:'ok', vera:false, dot:'var(--amber)'},
+  {naam:'Thuiskopieheffing', cat:'Auteursrechten', prijs:320, freq:'jr', contract:'jan 2027', status:'ok', vera:false, dot:'var(--amber)'},
+  {naam:'KHN lidmaatschap', cat:'Branchevereniging', prijs:640, freq:'jr', contract:'jan 2027', status:'ok', vera:false, dot:'var(--blue)'},
+  {naam:'Green Key certificering', cat:'Keurmerk', prijs:290, freq:'jr', contract:'apr 2027', status:'ok', vera:false, dot:'var(--green)'},
+  {naam:'Domeinnamen & SSL', cat:'Infrastructuur', prijs:120, freq:'jr', contract:'aug 2026', status:'verloopt', vera:false, dot:'var(--gray)'},
+  {naam:'Brandblusser keuring', cat:'Veiligheid', prijs:180, freq:'jr', contract:'okt 2026', status:'ok', vera:false, dot:'var(--coral)'},
+  {naam:'Toeristenbelasting aangifte', cat:'Gemeente', prijs:0, freq:'kwt', contract:'kwartaal', status:'ok', vera:false, dot:'var(--purple)'},
 ];
 
 var actieveFilter = 'alle';
@@ -188,7 +198,8 @@ var catMap = {
   'alle': null,
   'pms': ['PMS & Operatie','Financiën'],
   'revenue': ['Channel Manager','Revenue Intelligence','Revenue Management'],
-  'overig': ['Reputatie & CRM','Productiviteit','Infrastructuur']
+  'overig': ['Reputatie & CRM','Productiviteit','Infrastructuur'],
+  'jaarlijks': ['Muziekrechten','Auteursrechten','Branchevereniging','Keurmerk','Veiligheid','Gemeente']
 };
 
 document.querySelectorAll('.tab').forEach(function(tab) {
