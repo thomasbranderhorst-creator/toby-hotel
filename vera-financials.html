@@ -358,7 +358,7 @@ function renderVandaag() {
       '<div class="otb-row" style="background:var(--purple-bg)">' +
         '<div style="flex:1">' +
           '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">' + otb.kamers_otb + ' kamers on the books</div>' +
-          '<div style="font-size:11px;color:var(--text3)">van 45 beschikbare kamers (' + Math.round(otb.kamers_otb/45*100) + '% bezetting)</div>' +
+          '<div style="font-size:11px;color:var(--text3)">van 60 beschikbare kamers (' + Math.round(otb.kamers_otb/60*100) + '% bezetting)</div>' +
         '</div>' +
         '<span class="otb-risico risico-' + risicoKlasse + '">' + otb.cancelrisico_pct + '% cancel</span>' +
       '</div>' +
@@ -534,7 +534,7 @@ var weergave = 'kas';
 
 // Vaste lasten per dag (accrual berekening)
 var vasteLastenPerDag = {
-  huur: 8500 / 30,           // €283/dag
+  huur: 11200 / 30,           // €283/dag
   verzekering: 1240 / 365,   // €3.40/dag
   software: 3240 / 30,       // €108/dag
   marketing_vast: 380 / 30   // €12.67/dag
