@@ -397,7 +397,7 @@ async function init() {
   if(hotel.data){document.getElementById('hotel-naam').textContent=hotel.data.naam;document.getElementById('hotel-sub').textContent=hotel.data.naam;}
 
   var vandaag=nu.toISOString().split('T')[0];
-  var [comp,act,medew,mews,shift,exact,docs,reviews,hotel]=await Promise.all([
+  var [comp,act,medew,mews,shift,exact,docs,reviews,hotelInfo]=await Promise.all([
     sb.from('compliance_items').select('*').eq('hotel_id',HOTEL_ID).order('status'),
     sb.from('acties').select('*, compliance_items(naam)').eq('hotel_id',HOTEL_ID).eq('status','open').order('created_at',{ascending:false}),
     sb.from('medewerkers').select('*').eq('hotel_id',HOTEL_ID).eq('actief',true).order('naam'),
@@ -409,7 +409,7 @@ async function init() {
     sb.from('hotels').select('kamers').eq('id',HOTEL_ID).single()
   ]);
   complianceData=comp.data||[];actiesData=act.data||[];medewData=medew.data||[];
-  mewsData=mews.data||[];shiftbaseData=shift.data||[];exactData=exact.data&&exact.data[0]?exact.data[0]:null;if(hotel.data&&hotel.data.kamers)hotelKamers=hotel.data.kamers;
+  mewsData=mews.data||[];shiftbaseData=shift.data||[];exactData=exact.data&&exact.data[0]?exact.data[0]:null;if(hotelInfo.data&&hotelInfo.data.kamers)hotelKamers=hotelInfo.data.kamers;
   documentenData=docs.data||[];reviewData=reviews.data||[];
 
   renderCompliance();renderActies();renderMedewerkers();
