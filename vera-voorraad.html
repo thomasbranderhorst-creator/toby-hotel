@@ -391,7 +391,13 @@ async function analysePhoto() {
 function toonResultaat(result) {
   var items = result.items || [];
   document.getElementById('result-title').textContent = catLabels[selectedCat];
-  document.getElementById('result-sub').textContent = items.length + ' producten';
+  // Bereken voorraadwaarde
+  var totaalWaarde = items.reduce(function(som, item) {
+    var cat = productCatalogus[item.naam] || {};
+    return som + (item.aantal * (cat.prijs || 0));
+  }, 0);
+  var waardeStr = totaalWaarde > 0 ? ' · €' + totaalWaarde.toFixed(2) : '';
+  document.getElementById('result-sub').textContent = items.length + ' producten' + waardeStr;
 
   var html = items.map(function(item) {
     var conf = Math.round((item.betrouwbaarheid || 0.8) * 100);
@@ -536,6 +542,27 @@ function renderBesteladvies() {
   }
   document.getElementById('bestel-leeg').style.display = 'none';
 
+  // Totale voorraadwaarde (alle producten laatste telling)
+  var totaalWaarde = Object.values(laatste).reduce(function(som, item) {
+    var cat = productCatalogus[item.naam] || {};
+    return som + (item.aantal * (cat.prijs || 0));
+  }, 0);
+  var missendeWaarde = Object.values(laatste).reduce(function(som, item) {
+    var cat = productCatalogus[item.naam] || {};
+    var min = cat.minimum || 0;
+    var tekort = Math.max(0, min - item.aantal);
+    return som + (tekort * (cat.prijs || 0));
+  }, 0);
+
+  document.getElementById('bestel-lijst').innerHTML = totaalWaarde > 0 ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+    '<div style="background:var(--bg2);border-radius:8px;padding:12px;border:0.5px solid var(--border2)">' +
+      '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Voorraadwaarde</div>' +
+      '<div style="font-size:20px;font-weight:700;font-family:var(--font-mono,monospace);color:var(--green)">€' + totaalWaarde.toFixed(2) + '</div></div>' +
+    '<div style="background:var(--coral-bg);border-radius:8px;padding:12px;border:0.5px solid var(--coral-border)">' +
+      '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Bestelwaarde</div>' +
+      '<div style="font-size:20px;font-weight:700;font-family:var(--font-mono,monospace);color:var(--coral)">€' + missendeWaarde.toFixed(2) + '</div></div>' +
+    '</div>' : '';
+
   var html = levNamen.map(function(lev) {
     var levInfo = leveranciers.find(l => l.naam === lev) || {};
     var items = perLev[lev];
@@ -664,6 +691,12 @@ function renderLeveranciers() {
 function setMinimum(naam, val) {
   if (!productCatalogus[naam]) productCatalogus[naam] = {};
   productCatalogus[naam].minimum = parseInt(val) || 0;
+  localStorage.setItem('vera_product_catalogus', JSON.stringify(productCatalogus));
+}
+
+function setPrijs(naam, val) {
+  if (!productCatalogus[naam]) productCatalogus[naam] = {};
+  productCatalogus[naam].prijs = parseFloat(val) || 0;
   localStorage.setItem('vera_product_catalogus', JSON.stringify(productCatalogus));
 }
 
