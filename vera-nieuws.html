@@ -165,7 +165,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="cat-tab" data-feed="horeca subsidie energiebesparing RVO 2025">Subsidies</div>
     <div class="cat-tab" data-feed="hotel brandveiligheid HACCP compliance nederland">Compliance</div>
     <div class="cat-tab" data-feed="hotel markt bezetting revenue nederland 2025">Markt</div>
-    <div class="cat-tab" id="tab-weer" data-feed="weer nederland hotel toerisme zomer">&#127782;&#65039; Weer &amp; Toerisme</div>
+    <div class="cat-tab active" id="tab-weer" data-feed="weer nederland hotel toerisme zomer">&#127782;&#65039; Weer &amp; Toerisme</div>
     <div class="cat-tab" id="tab-jouw-bron" onclick="openJouwBron()" style="border:1px dashed rgba(99,85,224,0.4);color:var(--purple)">&#43; Jouw nieuwsbron</div>
     <div class="cat-tab" id="tab-lokaal" data-feed="hotel horeca Amsterdam gemeente">&#127968; Amsterdam</div>
   </div>
@@ -248,9 +248,15 @@ var lokaleFeed = {
 // RSS via rss2json.com — zie laadFeed functie
 
 async function init() {
-  // Toon nieuws direct zonder te wachten op Supabase
-  var eersteTab = document.querySelector('.cat-tab');
-  if (eersteTab) laadFeed(eersteTab.dataset.feed);
+  // Laad Weer tab als default
+  var weerTab = document.getElementById('tab-weer');
+  var weerWidget = document.getElementById('weer-widget');
+  if (weerTab) {
+    document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+    weerTab.classList.add('active');
+    laadFeed(weerTab.dataset.feed);
+  }
+  if (weerWidget) { weerWidget.style.display = 'block'; laadWeerGrafiek(); }
   updateLokaleBron();
 
   // Supabase op achtergrond
