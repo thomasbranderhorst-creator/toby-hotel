@@ -341,7 +341,15 @@ function switchTab(name, btn) {
   if (name === 'bestel') renderBesteladvies();
   if (name === 'leveranciers') renderLeveranciers();
   if (name === 'geschiedenis') renderGeschiedenis();
-  if (name === 'scan') renderHistMini();
+  if (name === 'scan') {
+    // Zorg dat scan-card altijd zichtbaar is tenzij er een actieve scan loopt
+    if (!currentImageBase64) {
+      document.getElementById('scan-card').style.display = 'block';
+      document.getElementById('preview-card').style.display = 'none';
+      document.getElementById('loading-card').style.display = 'none';
+    }
+    renderHistMini();
+  }
 }
 function switchTabByName(n) { switchTab(n, document.querySelectorAll('.tab')[['scan','bestel','leveranciers','geschiedenis'].indexOf(n)]); }
 
@@ -840,6 +848,11 @@ function renderHistMini() {
   }).join('');
 }
 
+// Zorg dat scan-card zichtbaar is bij laden
+document.getElementById('scan-card').style.display = 'block';
+document.getElementById('preview-card').style.display = 'none';
+document.getElementById('loading-card').style.display = 'none';
+document.getElementById('result-card').style.display = 'none';
 renderHistMini();
 </script>
 </body>
