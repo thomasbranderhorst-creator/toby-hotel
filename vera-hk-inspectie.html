@@ -220,8 +220,12 @@ body { background: var(--bg); font-family: 'DM Sans', -apple-system, sans-serif;
             </div>
           </div>
           <div class="form-row">
-            <label class="form-label">Jouw naam (inspector)</label>
-            <input type="text" class="form-input" id="start-inspector" placeholder="bijv. Jan de Vries">
+            <label class="form-label">Jouw naam (inspector) *</label>
+            <input type="text" class="form-input" id="start-inspector" placeholder="bijv. Jan de Vries" oninput="localStorage.setItem('vera_inspector_naam',this.value)">
+          </div>
+          <div style="background:var(--bg);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text2);display:flex;justify-content:space-between">
+            <span>📅 Datum &amp; tijd</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--text)" id="start-datum-display"></span>
           </div>
           <button class="btn-primary" id="start-btn" onclick="startInspectie()">🔍 Inspectie starten</button>
         </div>
@@ -272,6 +276,11 @@ body { background: var(--bg); font-family: 'DM Sans', -apple-system, sans-serif;
             <div style="font-size:14px;color:var(--text2)">Inspectie afgerond</div>
             <div class="done-score" id="done-score-val"></div>
             <div class="done-label" id="done-label"></div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:12px;color:var(--text3)">📅 <span id="done-datum"></span></div>
+              <div style="font-size:12px;color:var(--text3)">👤 Inspector: <span id="done-inspector" style="color:var(--text2);font-weight:500"></span></div>
+              <div style="font-size:12px;color:var(--text3)">🏨 Kamer: <span id="done-kamer" style="color:var(--text2);font-weight:500"></span></div>
+            </div>
           </div>
           <div class="done-breakdown" id="done-breakdown"></div>
           <button class="btn-primary" onclick="slaInspectieOp()">💾 Opslaan in log</button>
@@ -480,6 +489,17 @@ function initInspectieTab() {
   sel.innerHTML = '<option value="">Onbekend</option>';
   namen.forEach(function(n) { sel.innerHTML += '<option>' + n + '</option>'; });
 
+  // Datum live
+  var nu = new Date();
+  var datumStr = nu.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' · ' + nu.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  var el = document.getElementById('start-datum-display');
+  if (el) el.textContent = datumStr;
+
+  // Naam onthouden
+  var opgeslagen = localStorage.getItem('vera_inspector_naam') || '';
+  var inp = document.getElementById('start-inspector');
+  if (inp && !inp.value && opgeslagen) inp.value = opgeslagen;
+
   if (!checklist) {
     document.getElementById('geen-checklist-warning').style.display = 'block';
     document.getElementById('start-btn').disabled = true;
@@ -491,12 +511,14 @@ function initInspectieTab() {
 
 function startInspectie() {
   var kamer = document.getElementById('start-kamer').value.trim();
+  var inspector = document.getElementById('start-inspector').value.trim();
   if (!kamer) { alert('Vul een kamernummer in'); return; }
+  if (!inspector) { alert('Vul jouw naam in als inspector'); return; }
   if (!checklist || !checklist.punten.length) { alert('Laad eerst een checklist'); return; }
 
   inspectieKamer = kamer;
   inspectieHK = document.getElementById('start-hk').value;
-  inspectieInspector = document.getElementById('start-inspector').value;
+  inspectieInspector = inspector;
   huidigePuntIdx = 0;
   antwoorden = checklist.punten.map(function() { return { score: null, opmerking: '', foto: null }; });
 
@@ -599,6 +621,10 @@ function toonAfronden() {
   document.getElementById('done-score-val').textContent = totaal;
   document.getElementById('done-score-val').style.color = kleur;
   document.getElementById('done-label').textContent = label + ' · ' + scores.length + ' punten beoordeeld';
+  var nu = new Date();
+  document.getElementById('done-datum').textContent = nu.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' · ' + nu.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('done-inspector').textContent = inspectieInspector;
+  document.getElementById('done-kamer').textContent = inspectieKamer;
 
   var breakdown = checklist.punten.map(function(p, i) {
     var score = antwoorden[i].score;
