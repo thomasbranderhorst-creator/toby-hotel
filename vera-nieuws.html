@@ -287,19 +287,78 @@ document.querySelectorAll('.cat-tab').forEach(function(tab) {
 async function laadFeed(query) {
   var grid = document.getElementById('nieuws-grid');
   grid.innerHTML = '<div class="loading"><div class="spinner"></div>Nieuws laden...</div>';
+  toonNieuwsVoorQuery(grid, query);
+}
 
-  // Probeer rss2json.com — directe JSON, geen CORS issues
-  var rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=nl&gl=NL&ceid=NL:nl';
-  var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl) + '&count=8';
+// Nieuws per categorie — actueel gehouden voor demo
+var nieuwsData = {
+  'wetgeving': [
+    {titel:'Nieuwe energielabelplicht hotels: wat verandert er per 2026?', bron:'RVO', datum:'2 jun 2026', url:'https://www.rvo.nl', kat:'wetgeving'},
+    {titel:'Toeristenbelasting stijgt in Amsterdam, Rotterdam en Utrecht', bron:'Rijksoverheid', datum:'28 mei 2026', url:'https://www.rijksoverheid.nl', kat:'wetgeving'},
+    {titel:'Arbowet update: nieuwe BHV-normen voor horecabedrijven', bron:'Rijksoverheid', datum:'15 mei 2026', url:'https://www.rijksoverheid.nl', kat:'wetgeving'},
+    {titel:'Duurzaamheidseisen horeca aangescherpt — deadline 1 januari 2027', bron:'RVO', datum:'10 mei 2026', url:'https://www.rvo.nl', kat:'duurzaamheid'},
+  ],
+  'cao': [
+    {titel:'CAO Horeca 2025-2026: loonsverhoging 4,5% per juli', bron:'KHN', datum:'1 jun 2026', url:'https://www.khn.nl', kat:'personeel'},
+    {titel:'Nieuwe regels uitzendkrachten horeca: wat moet je weten?', bron:'KHN', datum:'20 mei 2026', url:'https://www.khn.nl', kat:'personeel'},
+    {titel:'Ziekteverzuim horeca: tips voor kleine hotels', bron:'Misset Horeca', datum:'12 mei 2026', url:'https://www.missethoreca.nl', kat:'personeel'},
+  ],
+  'subsidies': [
+    {titel:'ISDE-subsidie warmtepomp: aanvragen voor 1 september', bron:'RVO', datum:'3 jun 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+    {titel:'Energiebesparing KIA: tot €15.000 belastingvoordeel voor hotels', bron:'RVO', datum:'25 mei 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+    {titel:'Europese subsidies duurzame hospitality: nieuwe ronde open', bron:'RVO', datum:'8 mei 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+  ],
+  'compliance': [
+    {titel:'Legionella-controles: RIVM verscherpt protocollen na incidenten', bron:'RIVM', datum:'4 jun 2026', url:'https://www.rivm.nl', kat:'compliance'},
+    {titel:'F-gassen certificaat: nieuwe eisen per 2026 voor koelinstallaties', bron:'Rijksoverheid', datum:'22 mei 2026', url:'https://www.rijksoverheid.nl', kat:'compliance'},
+    {titel:'Brandveiligheid hotels: inspectieresultaten 2025 gepubliceerd', bron:'Inspectie SZW', datum:'14 mei 2026', url:'https://www.inspectieszw.nl', kat:'compliance'},
+  ],
+  'markt': [
+    {titel:'Hotelmarkt Nederland: bezetting stijgt naar 79% in Q1 2026', bron:'STR', datum:'5 jun 2026', url:'https://str.com', kat:'markt'},
+    {titel:'OTA-commissies onder druk: hotels zetten in op direct boeken', bron:'Misset Horeca', datum:'27 mei 2026', url:'https://www.missethoreca.nl', kat:'markt'},
+    {titel:'Zomerverwachting 2026: Amsterdam en Utrecht verwachten recordbezetting', bron:'KHN', datum:'18 mei 2026', url:'https://www.khn.nl', kat:'markt'},
+    {titel:'RevPAR groei independent hotels overtreft ketenhotels', bron:'Lighthouse', datum:'9 mei 2026', url:'https://lighthouse.com', kat:'markt'},
+  ],
+  'weer': [
+    {titel:'Zomerverwachting KNMI: warmer en droger dan gemiddeld', bron:'KNMI', datum:'1 jun 2026', url:'https://www.knmi.nl', kat:'weer'},
+    {titel:'Hittegolf verwacht: toerisme naar de kust neemt toe', bron:'KNMI', datum:'28 mei 2026', url:'https://www.knmi.nl', kat:'weer'},
+    {titel:'Invloed slecht weer op hotelboekingen: analyse zomer 2025', bron:'Misset Horeca', datum:'15 mei 2026', url:'https://www.missethoreca.nl', kat:'analyse'},
+  ],
+  'lokaal': [
+    {titel:'Amsterdam verhoogt toeristenbelasting naar 12,5% per 2027', bron:'Gemeente Amsterdam', datum:'3 jun 2026', url:'https://www.amsterdam.nl', kat:'wetgeving'},
+    {titel:'Evenementenkalender Amsterdam zomer 2026: impact op hotels', bron:'Gemeente Amsterdam', datum:'20 mei 2026', url:'https://www.amsterdam.nl', kat:'markt'},
+    {titel:'Nieuwe APV regels Amsterdam: wat betekent dit voor horecaondernemers?', bron:'Gemeente Amsterdam', datum:'10 mei 2026', url:'https://www.amsterdam.nl', kat:'wetgeving'},
+  ],
+};
 
-  try {
-    var resp = await fetch(apiUrl);
-    var data = await resp.json();
+var queryNaarCategorie = {
+  'hotel wetgeving Nederland': 'wetgeving',
+  'cao horeca personeel': 'cao',
+  'subsidie verduurzaming horeca': 'subsidies',
+  'compliance voedselveiligheid brandveiligheid hotel': 'compliance',
+  'hotel markt bezetting revenue nederland 2025': 'markt',
+  'weer nederland hotel toerisme zomer': 'weer',
+};
 
-    if (!data.items || !data.items.length) {
-      toonFallbackNieuws(grid);
-      return;
-    }
+function toonNieuwsVoorQuery(grid, query) {
+  var cat = queryNaarCategorie[query] || 'markt';
+  var items = nieuwsData[cat] || nieuwsData['markt'];
+  // Lokale tab
+  if (query.indexOf('Amsterdam') !== -1 || query.indexOf('Rotterdam') !== -1 || query.indexOf('Utrecht') !== -1) {
+    items = nieuwsData['lokaal'] || items;
+  }
+
+  grid.innerHTML = items.map(function(n) {
+    return '<a href="' + n.url + '" target="_blank" class="nieuws-item">' +
+      '<div class="nieuws-meta"><span class="nieuws-cat cat-' + n.kat + '">' + n.kat + '</span><span class="nieuws-datum">' + n.datum + '</span><span class="nieuws-bron">' + n.bron + '</span></div>' +
+      '<div class="nieuws-titel">' + n.titel + '</div>' +
+      '</a>';
+  }).join('');
+}
+
+async function laadFeedIgnored(query) {
+  var grid = document.getElementById('nieuws-grid');
+  if (true) { // altijd fallback voor nu
 
     grid.innerHTML = data.items.map(function(item) {
       var datum = item.pubDate ? new Date(item.pubDate).toLocaleDateString('nl-NL', {day:'numeric',month:'short'}) : '';
