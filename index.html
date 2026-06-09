@@ -1235,7 +1235,17 @@
         <div style="display:flex;flex-direction:column;gap:8px">
           <div style="background:#f4f1ec;border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px">
             <div style="font-size:16px;flex-shrink:0">&#128193;</div>
-            <div><strong style="color:#1a1814">Een map met documenten</strong><br><span style="color:#4a4640">Lokaal, Google Drive, OneDrive of Dropbox. Vera scant de map, herkent automatisch wat erin zit — BHV-certificaten, onderhoudsrapporten, contracten, facturen — en vult het dashboard in.</span></div>
+            <div>
+              <strong style="color:#1a1814">Een map met documenten</strong><br>
+              <span style="color:#4a4640">Lokaal, Google Drive, OneDrive of Dropbox. Vera scant de map en herkent automatisch wat erin zit:</span>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11px;color:#4a4640">
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#2a9d5c">&#10003;</span> <strong>Contracten &amp; facturen</strong> — Vera leest leverancier, prijs, looptijd en categorie uit. Maakt automatisch een rij aan in Software &amp; Abonnementen en Installaties &amp; Contracten.</div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#2a9d5c">&#10003;</span> <strong>BHV-certificaten</strong> — naam medewerker, vervaldatum, type. Direct zichtbaar in Personeel.</div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#2a9d5c">&#10003;</span> <strong>Onderhoudsrapporten</strong> — welke installatie, wanneer, door wie. Vult Installaties module in.</div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#2a9d5c">&#10003;</span> <strong>Vergunningen &amp; keuringsrapporten</strong> — type, geldigheid, vervaldatum. Vult Compliance in.</div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="color:#2a9d5c">&#10003;</span> <strong>Wat Vera niet herkent</strong> — vraagt ze op in gewone taal. Geen formulier.</div>
+              </div>
+            </div>
           </div>
           <div style="background:#f4f1ec;border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px">
             <div style="font-size:16px;flex-shrink:0">&#128268;</div>
@@ -1259,7 +1269,11 @@
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.07)">
           <div style="font-family:monospace;font-size:10px;color:#9a948c;width:50px;flex-shrink:0">2:00</div>
-          <div style="font-size:12px;color:#4a4640"><strong style="color:#1a1814">Documentmap aanwijzen</strong> — lokaal, Drive, OneDrive of Dropbox. Vera scant automatisch</div>
+          <div style="font-size:12px;color:#4a4640"><strong style="color:#1a1814">Documentmap aanwijzen</strong> — lokaal, Drive, OneDrive of Dropbox. Vera scant en leest alle contracten, certificaten en rapporten automatisch uit</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.07)">
+          <div style="font-family:monospace;font-size:10px;color:#9a948c;width:50px;flex-shrink:0">4:00</div>
+          <div style="font-size:12px;color:#4a4640"><strong style="color:#1a1814">Vera vult automatisch in</strong> — contracten worden software-abonnementen, certificaten worden compliance-items, rapporten worden installatie-records</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.07)">
           <div style="font-family:monospace;font-size:10px;color:#9a948c;width:50px;flex-shrink:0">5:00</div>
@@ -1301,9 +1315,13 @@
           <div><strong style="color:#1a1814">Toegang intrekken = data weg</strong><br>De manager trekt de map-toegang in en Vera verliest onmiddellijk toegang. Geen data-export procedure, geen wachttijd. Vera verwijdert afgeleide data binnen 30 dagen conform AVG.</div>
         </div>
 
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.07)">
           <div style="color:#2a9d5c;flex-shrink:0;font-size:14px">&#10003;</div>
           <div><strong style="color:#1a1814">AI verwerking transparant</strong><br>Vera gebruikt de Anthropic Claude API voor document-uitlezing. Anthropic verwerkt geen trainingsdata uit API-calls. Prompts en responses worden niet opgeslagen door Anthropic.</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+          <div style="color:#2a9d5c;flex-shrink:0;font-size:14px">&#10003;</div>
+          <div><strong style="color:#1a1814">Documenten verlaten de map nooit</strong><br>Vera leest de inhoud tijdelijk uit voor analyse. Het originele bestand blijft waar het staat — in jouw map, op jouw server of in jouw cloud. Vera slaat alleen de uitgelezen metadata op: naam, datum, type, status. Nooit de volledige documentinhoud.</div>
         </div>
 
       </div>
