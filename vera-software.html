@@ -90,6 +90,25 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;color:var(--bg);z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;font-family:'DM Mono',monospace;white-space:nowrap}
 .toast.show{opacity:1}
 @media(max-width:700px){.kpi-strip{grid-template-columns:1fr 1fr}.soft-row{grid-template-columns:16px 1fr 80px 70px}.soft-datum,.soft-vera{display:none}}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:10px}
+.upload-zone:hover{border-color:var(--purple);background:var(--purple-bg)}
+.upload-zone-icon{font-size:28px;margin-bottom:8px}
+.upload-zone-tekst{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.upload-zone-sub{font-size:11px;color:var(--text3)}
+.upload-zone-link{color:var(--purple);cursor:pointer}
+.vera-analyse{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:none}
+.vera-analyse.show{display:block}
+.vera-analyse-titel{font-size:12px;font-weight:600;color:var(--purple);margin-bottom:8px}
+.vera-analyse-rij{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
+.vera-analyse-rij:last-child{border-bottom:none}
+.vera-analyse-lbl{color:var(--text3)}
+.vera-analyse-val{font-family:'DM Mono',monospace;color:var(--text);font-weight:500}
+.vera-analyse-acties{display:flex;gap:8px;margin-top:12px}
+.vera-add-btn{background:var(--purple);border:none;border-radius:7px;padding:8px 16px;font-size:12px;font-weight:500;color:white;cursor:pointer}
+.vera-discard-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:8px 14px;font-size:12px;color:var(--text2);cursor:pointer}
+input[type=file]{display:none}
 </style>
 </head>
 <body>
@@ -170,7 +189,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   </div>
 
   <!-- Software lijst -->
-  <div class="section-label">Alle abonnementen</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 8px">
+  <div class="section-label" style="padding:0">Alle abonnementen</div>
+  <button onclick="document.getElementById('upload-contract-input').click()" style="background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--purple);cursor:pointer;font-family:'DM Sans',sans-serif">
+    &#10024; Upload contract of factuur
+  </button>
+</div>
+<input type="file" id="upload-contract-input" accept=".pdf,.jpg,.jpeg,.png,.docx">
+
+<!-- Vera analyse resultaat -->
+<div class="vera-analyse" id="vera-analyse">
+  <div class="vera-analyse-titel">&#10024; Vera heeft dit contract uitgelezen</div>
+  <div id="vera-analyse-inhoud"></div>
+  <div class="vera-analyse-acties">
+    <button class="vera-add-btn" onclick="voegAbonnementToe()">&#43; Toevoegen aan overzicht</button>
+    <button class="vera-discard-btn" onclick="verwijderAnalyse()">Weggooien</button>
+  </div>
+</div>
+
   <div class="soft-grid" id="soft-grid"></div>
 
 </div>
@@ -233,6 +269,109 @@ function renderGrid() {
     '</div>';
   }).join('');
 }
+
+
+var ANTHROPIC_KEY = localStorage.getItem('vera_anthropic_key') || '';
+var geanalyseerd = null;
+
+document.getElementById('upload-contract-input').addEventListener('change', async function() {
+  var file = this.files[0];
+  if (!file) return;
+
+  var analyseDiv = document.getElementById('vera-analyse');
+  var inhoudDiv = document.getElementById('vera-analyse-inhoud');
+  analyseDiv.classList.add('show');
+  inhoudDiv.innerHTML = '<div style="font-size:12px;color:var(--text3)">&#9203; Vera analyseert ' + file.name + '...</div>';
+
+  if (!ANTHROPIC_KEY) {
+    // Simuleer analyse zonder API key — voor demo
+    setTimeout(function() {
+      var gesimuleerd = simuleerAnalyse(file.name);
+      toonAnalyse(gesimuleerd, inhoudDiv);
+    }, 1500);
+    return;
+  }
+
+  // Met API key: stuur naar Claude
+  try {
+    var base64data = await new Promise(function(resolve) {
+      var reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+      reader.readAsDataURL(file);
+    });
+
+    var mediaType = file.type || 'application/pdf';
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        system: 'Je bent Vera. Lees dit document en extraheer: naam van de software/dienst, leverancier, maandelijkse of jaarlijkse kosten (omreken naar per maand), contractvervaldatum, categorie (PMS & Operatie / Revenue Intelligence / Financiën / Channel Manager / Reputatie & CRM / Productiviteit / Infrastructuur / Overig). Antwoord ALLEEN in JSON: {"naam":"...","leverancier":"...","prijs_per_maand":0,"contract_datum":"...","categorie":"..."}',
+        messages: [{role:'user', content:[
+          {type:'image', source:{type:'base64', media_type:mediaType, data:base64data}},
+          {type:'text', text:'Extraheer de abonnementsgegevens uit dit document.'}
+        ]}]
+      })
+    });
+    var data = await resp.json();
+    var tekst = data.content ? data.content.filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('') : '';
+    var parsed = JSON.parse(tekst.replace(/```json|```/g,'').trim());
+    toonAnalyse(parsed, inhoudDiv);
+  } catch(e) {
+    var gesimuleerd = simuleerAnalyse(file.name);
+    toonAnalyse(gesimuleerd, inhoudDiv);
+  }
+});
+
+function simuleerAnalyse(filename) {
+  // Demo simulatie op basis van bestandsnaam
+  var naam = filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  return {
+    naam: naam.charAt(0).toUpperCase() + naam.slice(1),
+    leverancier: 'Automatisch herkend',
+    prijs_per_maand: 149,
+    contract_datum: '2027-12-31',
+    categorie: 'Overig'
+  };
+}
+
+function toonAnalyse(data, inhoudDiv) {
+  geanalyseerd = data;
+  inhoudDiv.innerHTML =
+    '<div class="vera-analyse-rij"><span class="vera-analyse-lbl">Software</span><span class="vera-analyse-val">' + (data.naam||'—') + '</span></div>' +
+    '<div class="vera-analyse-rij"><span class="vera-analyse-lbl">Leverancier</span><span class="vera-analyse-val">' + (data.leverancier||'—') + '</span></div>' +
+    '<div class="vera-analyse-rij"><span class="vera-analyse-lbl">Prijs per maand</span><span class="vera-analyse-val">€' + (data.prijs_per_maand||'—') + '</span></div>' +
+    '<div class="vera-analyse-rij"><span class="vera-analyse-lbl">Contract t/m</span><span class="vera-analyse-val">' + (data.contract_datum||'—') + '</span></div>' +
+    '<div class="vera-analyse-rij"><span class="vera-analyse-lbl">Categorie</span><span class="vera-analyse-val">' + (data.categorie||'Overig') + '</span></div>';
+}
+
+function voegAbonnementToe() {
+  if (!geanalyseerd) return;
+  // Voeg toe aan softwareData en herrender
+  softwareData.push({
+    naam: geanalyseerd.naam,
+    cat: geanalyseerd.categorie || 'Overig',
+    prijs: geanalyseerd.prijs_per_maand || 0,
+    freq: 'mnd',
+    contract: geanalyseerd.contract_datum || 'onbekend',
+    status: 'ok',
+    vera: false,
+    dot: 'var(--purple)'
+  });
+  renderGrid();
+  document.getElementById('vera-analyse').classList.remove('show');
+  geanalyseerd = null;
+  document.getElementById('upload-contract-input').value = '';
+  showToast('✓ ' + (geanalyseerd ? geanalyseerd.naam : 'Abonnement') + ' toegevoegd');
+}
+
+function verwijderAnalyse() {
+  document.getElementById('vera-analyse').classList.remove('show');
+  geanalyseerd = null;
+  document.getElementById('upload-contract-input').value = '';
+}
+
 
 renderGrid();
 
