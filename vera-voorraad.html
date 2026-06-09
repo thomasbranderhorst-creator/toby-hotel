@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vera — Voorraad scan</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f1ec;
+  --bg2: #eceae4;
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1814;
+  --text2: #5a5650;
+  --text3: #8a8680;
+  --purple: #6355e0;
+  --purple-bg: rgba(99,85,224,0.08);
+  --purple-border: rgba(99,85,224,0.25);
+  --green: #1a8c5a;
+  --green-bg: rgba(26,140,90,0.08);
+  --green-border: rgba(26,140,90,0.25);
+  --amber: #c47c0a;
+  --amber-bg: rgba(196,124,10,0.08);
+  --coral: #d84a30;
+  --coral-bg: rgba(216,74,48,0.08);
+  --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+  --radius: 12px;
+}
+body { background: var(--bg); font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+.header { padding: 16px 20px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--border2); background: var(--card); }
+.header-back { font-size: 13px; color: var(--purple); text-decoration: none; }
+.header-title { font-size: 15px; font-weight: 600; flex: 1; }
+.header-badge { font-size: 10px; font-family: 'DM Mono', monospace; background: var(--purple-bg); color: var(--purple); border: 0.5px solid var(--purple-border); padding: 2px 8px; border-radius: 20px; }
+
+.main { padding: 16px 16px 0; max-width: 480px; margin: 0 auto; }
+
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 12px; overflow: hidden; }
+.card-header { padding: 12px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.card-title { font-size: 13px; font-weight: 600; }
+.card-body { padding: 16px; }
+
+/* Upload zone */
+.upload-zone { border: 1.5px dashed var(--border2); border-radius: 10px; padding: 28px 16px; text-align: center; cursor: pointer; transition: all .15s; background: var(--bg); position: relative; }
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--purple); background: var(--purple-bg); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--text3); }
+
+/* Camera knop */
+.camera-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--purple); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 10px; font-family: inherit; }
+.camera-btn:active { opacity: 0.85; }
+
+/* Preview */
+#preview-section { display: none; }
+.preview-img { width: 100%; border-radius: 8px; max-height: 260px; object-fit: cover; }
+.preview-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; flex: 1; }
+.btn-primary { background: var(--purple); color: white; }
+.btn-secondary { background: var(--bg2); color: var(--text); border: 0.5px solid var(--border2); }
+
+/* Categorie selector */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.cat-btn { padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); font-family: inherit; text-align: left; display: flex; align-items: center; gap: 6px; transition: all .12s; }
+.cat-btn.active { background: var(--purple-bg); border-color: var(--purple-border); color: var(--purple); }
+.cat-btn:hover { border-color: var(--purple-border); }
+
+/* Resultaat */
+#result-section { display: none; }
+.result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.result-icon { font-size: 24px; }
+.result-title { font-size: 15px; font-weight: 600; }
+.result-sub { font-size: 12px; color: var(--text3); }
+
+.item-list { display: flex; flex-direction: column; gap: 6px; }
+.item-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 8px; border: 0.5px solid var(--border); }
+.item-icon { font-size: 18px; width: 28px; text-align: center; }
+.item-name { flex: 1; font-size: 13px; font-weight: 500; }
+.item-qty { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--purple); }
+.item-unit { font-size: 11px; color: var(--text3); }
+
+.confidence-bar { height: 3px; border-radius: 2px; background: var(--border2); margin-top: 4px; overflow: hidden; }
+.confidence-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .4s; }
+
+.opmerking-box { background: var(--amber-bg); border: 0.5px solid rgba(196,124,10,0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--amber); margin-top: 10px; line-height: 1.6; }
+
+.save-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--green); color: white; border: none; border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 12px; font-family: inherit; }
+.save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Opgeslagen */
+#saved-section { display: none; }
+.saved-banner { background: var(--green-bg); border: 0.5px solid var(--green-border); border-radius: 10px; padding: 16px; text-align: center; }
+.saved-icon { font-size: 32px; margin-bottom: 8px; }
+.saved-title { font-size: 15px; font-weight: 600; color: var(--green); }
+.saved-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+/* Loading */
+.loading-state { text-align: center; padding: 24px; }
+.spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border2); border-top-color: var(--purple); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.loading-sub { font-size: 12px; color: var(--text3); }
+
+/* Geschiedenis */
+.hist-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.hist-row:last-child { border: none; }
+.hist-cat { font-size: 16px; width: 24px; }
+.hist-info { flex: 1; }
+.hist-name { font-weight: 500; }
+.hist-time { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.hist-count { font-size: 13px; font-weight: 600; color: var(--purple); font-family: 'DM Mono', monospace; }
+
+.empty-state { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="vera-hub.html" class="header-back">← Hub</a>
+  <div class="header-title">Voorraad scan</div>
+  <span class="header-badge">AI Vision</span>
+</div>
+
+<div class="main">
+
+  <!-- Scan sectie -->
+  <div class="card" id="scan-card">
+    <div class="card-header">
+      <span>📦</span>
+      <div class="card-title">Nieuwe telling</div>
+    </div>
+    <div class="card-body">
+
+      <div class="cat-grid" id="cat-grid">
+        <button class="cat-btn active" data-cat="drank" onclick="selectCat(this)">🍷 Drank & bar</button>
+        <button class="cat-btn" data-cat="droog" onclick="selectCat(this)">🌾 Droge waren</button>
+        <button class="cat-btn" data-cat="vers" onclick="selectCat(this)">🥬 Vers & koel</button>
+        <button class="cat-btn" data-cat="schoonmaak" onclick="selectCat(this)">🧴 Schoonmaak</button>
+        <button class="cat-btn" data-cat="linen" onclick="selectCat(this)">🛏️ Linnengoed</button>
+        <button class="cat-btn" data-cat="overig" onclick="selectCat(this)">📦 Overig</button>
+      </div>
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*" onchange="handleFile(this)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-title">Foto uploaden</div>
+        <div class="upload-sub">Kies een afbeelding uit je galerij</div>
+      </div>
+
+      <button class="camera-btn" onclick="openCamera()">
+        📸 Foto maken met camera
+      </button>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="card" id="preview-section">
+    <div class="card-header">
+      <span>🖼️</span>
+      <div class="card-title">Foto gereed</div>
+    </div>
+    <div class="card-body">
+      <img id="preview-img" class="preview-img" src="" alt="Voorraad foto">
+      <div class="preview-actions">
+        <button class="btn btn-secondary" onclick="resetScan()">Andere foto</button>
+        <button class="btn btn-primary" onclick="analysePhoto()">✨ Analyseer met Vera</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="card" id="loading-section" style="display:none">
+    <div class="card-body loading-state">
+      <div class="spinner"></div>
+      <div class="loading-title">Vera telt de voorraad...</div>
+      <div class="loading-sub" id="loading-sub">Foto analyseren</div>
+    </div>
+  </div>
+
+  <!-- Resultaat -->
+  <div class="card" id="result-section">
+    <div class="card-header">
+      <span>✅</span>
+      <div class="card-title">Telling compleet</div>
+    </div>
+    <div class="card-body">
+      <div class="result-header">
+        <div>
+          <div class="result-title" id="result-title">Drank & bar</div>
+          <div class="result-sub" id="result-sub">0 producten herkend</div>
+        </div>
+      </div>
+      <div class="item-list" id="item-list"></div>
+      <div class="opmerking-box" id="opmerking-box" style="display:none"></div>
+      <button class="save-btn" id="save-btn" onclick="slaOp()">💾 Opslaan in Vera</button>
+    </div>
+  </div>
+
+  <!-- Opgeslagen bevestiging -->
+  <div class="card" id="saved-section">
+    <div class="card-body">
+      <div class="saved-banner">
+        <div class="saved-icon">✅</div>
+        <div class="saved-title">Voorraad opgeslagen</div>
+        <div class="saved-sub" id="saved-sub">Gesynced naar Vera dashboard</div>
+      </div>
+      <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="resetScan()">Nieuwe telling</button>
+    </div>
+  </div>
+
+  <!-- Geschiedenis -->
+  <div class="card">
+    <div class="card-header">
+      <span>🕐</span>
+      <div class="card-title">Recente tellingen</div>
+    </div>
+    <div class="card-body" style="padding:0 16px">
+      <div id="history-list">
+        <div class="empty-state">Nog geen tellingen — maak een eerste scan</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nznsimwgjwkdvudcdmup.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ';
+const HOTEL_ID = '6a0ba674-4bfc-44d8-bfcf-0b598d05e097';
+
+var selectedCat = 'drank';
+var currentImageBase64 = null;
+var currentResult = null;
+var history = JSON.parse(localStorage.getItem('vera_voorraad_history') || '[]');
+
+const catLabels = {
+  drank: '🍷 Drank & bar',
+  droog: '🌾 Droge waren',
+  vers: '🥬 Vers & koel',
+  schoonmaak: '🧴 Schoonmaak',
+  linen: '🛏️ Linnengoed',
+  overig: '📦 Overig'
+};
+
+const catPrompts = {
+  drank: 'flessen wijn, bier, spirits, frisdrank, cocktail ingrediënten, mixers',
+  droog: 'pakken pasta, rijst, meel, blikken, sauzen, kruiden, olie',
+  vers: 'groenten, fruit, zuivel, eieren, vlees, vis, kaas',
+  schoonmaak: 'schoonmaakmiddelen, desinfectans, papier, vuilniszakken',
+  linen: 'handdoeken, lakens, kussensloops, badmatten, dekbedovertrekken',
+  overig: 'producten, artikelen, items op de planken'
+};
+
+function getApiKey() {
+  return localStorage.getItem('vera_anthropic_key') || '';
+}
+
+function selectCat(btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedCat = btn.dataset.cat;
+}
+
+function openCamera() {
+  document.getElementById('camera-input').click();
+}
+
+function handleFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    currentImageBase64 = e.target.result.split(',')[1];
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('scan-card').style.display = 'none';
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('result-section').style.display = 'none';
+    document.getElementById('saved-section').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analysePhoto() {
+  var key = getApiKey();
+  if (!key) {
+    key = prompt('Vul je Anthropic API sleutel in (wordt lokaal opgeslagen):');
+    if (!key) return;
+    localStorage.setItem('vera_anthropic_key', key.trim());
+    key = key.trim();
+  }
+
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+
+  var loadingMessages = [
+    'Foto analyseren...',
+    'Producten herkennen...',
+    'Aantallen tellen...',
+    'Resultaat verwerken...'
+  ];
+  var msgIdx = 0;
+  var msgInterval = setInterval(function() {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    document.getElementById('loading-sub').textContent = loadingMessages[msgIdx];
+  }, 1200);
+
+  var prompt = `Je bent een nauwkeurige voorraadteller voor een hotel. Analyseer deze foto van de ${catLabels[selectedCat]} voorraadkast.
+
+Tel alle zichtbare producten (${catPrompts[selectedCat]}).
+
+Geef je antwoord ALLEEN als JSON, geen andere tekst:
+{
+  "items": [
+    {
+      "naam": "productnaam",
+      "emoji": "passend emoji",
+      "aantal": getal,
+      "eenheid": "flessen/stuks/dozen/kg/liter/rollen",
+      "betrouwbaarheid": getal tussen 0 en 1
+    }
+  ],
+  "opmerking": "optionele notitie over wat onduidelijk was of buiten beeld viel, of null",
+  "totaal_items": getal
+}
+
+Wees conservatief: als je niet zeker bent van een getal, schat dan naar beneden. Als iets niet zichtbaar is, tel het niet mee.`;
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: currentImageBase64
+              }
+            },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    clearInterval(msgInterval);
+    var data = await res.json();
+    var text = data.content[0].text;
+
+    // Strip JSON uit response
+    var jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Geen JSON in response');
+    currentResult = JSON.parse(jsonMatch[0]);
+
+    document.getElementById('loading-section').style.display = 'none';
+    toonResultaat(currentResult);
+
+  } catch(e) {
+    clearInterval(msgInterval);
+    document.getElementById('loading-section').style.display = 'none';
+    document.getElementById('preview-section').style.display = 'block';
+    alert('Fout bij analyse: ' + e.message);
+  }
+}
+
+function toonResultaat(result) {
+  var items = result.items || [];
+  document.getElementById('result-title').textContent = catLabels[selectedCat];
+  document.getElementById('result-sub').textContent = items.length + ' producten herkend · ' + result.totaal_items + ' stuks totaal';
+
+  var html = '';
+  items.forEach(function(item) {
+    var conf = Math.round((item.betrouwbaarheid || 0.8) * 100);
+    html += '<div class="item-row">';
+    html += '<div class="item-icon">' + (item.emoji || '📦') + '</div>';
+    html += '<div style="flex:1"><div class="item-name">' + item.naam + '</div>';
+    html += '<div class="confidence-bar"><div class="confidence-fill" style="width:' + conf + '%"></div></div></div>';
+    html += '<div style="text-align:right"><div class="item-qty">' + item.aantal + '</div>';
+    html += '<div class="item-unit">' + (item.eenheid || 'stuks') + '</div></div>';
+    html += '</div>';
+  });
+  document.getElementById('item-list').innerHTML = html || '<div class="empty-state">Geen producten herkend — probeer een scherpere foto</div>';
+
+  var opm = document.getElementById('opmerking-box');
+  if (result.opmerking) {
+    opm.textContent = '⚠ ' + result.opmerking;
+    opm.style.display = 'block';
+  } else {
+    opm.style.display = 'none';
+  }
+
+  document.getElementById('result-section').style.display = 'block';
+}
+
+async function slaOp() {
+  if (!currentResult) return;
+  var btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Opslaan...';
+
+  var entry = {
+    id: Date.now(),
+    categorie: selectedCat,
+    label: catLabels[selectedCat],
+    tijdstip: new Date().toISOString(),
+    items: currentResult.items,
+    totaal: currentResult.totaal_items
+  };
+
+  // Sla op in localStorage als geschiedenis
+  history.unshift(entry);
+  if (history.length > 20) history = history.slice(0, 20);
+  localStorage.setItem('vera_voorraad_history', JSON.stringify(history));
+
+  // Probeer ook naar Supabase te sturen als voorraad log
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/voorraad_tellingen', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        hotel_id: HOTEL_ID,
+        categorie: selectedCat,
+        items: currentResult.items,
+        totaal_items: currentResult.totaal_items,
+        opmerking: currentResult.opmerking,
+        geteld_door: 'medewerker',
+        geteld_op: new Date().toISOString()
+      })
+    });
+  } catch(e) {
+    // Supabase tabel bestaat nog niet — alleen localStorage voor nu
+  }
+
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('saved-section').style.display = 'block';
+  document.getElementById('saved-sub').textContent = entry.items.length + ' producten · ' + catLabels[selectedCat];
+
+  renderHistory();
+}
+
+function resetScan() {
+  currentImageBase64 = null;
+  currentResult = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('camera-input').value = '';
+  document.getElementById('scan-card').style.display = 'block';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'none';
+  document.getElementById('result-section').style.display = 'none';
+  document.getElementById('saved-section').style.display = 'none';
+  document.getElementById('save-btn').disabled = false;
+  document.getElementById('save-btn').textContent = '💾 Opslaan in Vera';
+}
+
+function renderHistory() {
+  var el = document.getElementById('history-list');
+  if (history.length === 0) {
+    el.innerHTML = '<div class="empty-state">Nog geen tellingen — maak een eerste scan</div>';
+    return;
+  }
+  el.innerHTML = history.slice(0, 8).map(function(h) {
+    var d = new Date(h.tijdstip);
+    var tijd = d.toLocaleDateString('nl-NL', {day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('nl-NL', {hour:'2-digit',minute:'2-digit'});
+    return '<div class="hist-row">' +
+      '<div class="hist-cat">' + (h.label.split(' ')[0]) + '</div>' +
+      '<div class="hist-info"><div class="hist-name">' + h.label.substring(2) + '</div>' +
+      '<div class="hist-time">' + tijd + '</div></div>' +
+      '<div class="hist-count">' + h.totaal + ' stuks</div>' +
+      '</div>';
+  }).join('');
+}
+
+renderHistory();
+</script>
+</body>
+</html>
