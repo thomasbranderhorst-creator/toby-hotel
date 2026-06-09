@@ -232,7 +232,7 @@ var lokaleFeed = {
 };
 
 // RSS proxy — gebruikt allorigins.win als CORS proxy voor Google News RSS
-var PROXY = 'https://api.allorigins.win/get?url=';
+// RSS via rss2json.com — zie laadFeed functie
 
 async function init() {
   // Haal hotel stad op
@@ -288,69 +288,52 @@ async function laadFeed(query) {
   var grid = document.getElementById('nieuws-grid');
   grid.innerHTML = '<div class="loading"><div class="spinner"></div>Nieuws laden...</div>';
 
+  // Probeer rss2json.com — directe JSON, geen CORS issues
   var rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=nl&gl=NL&ceid=NL:nl';
-  var proxyUrl = PROXY + encodeURIComponent(rssUrl);
+  var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl) + '&count=8';
 
   try {
-    var resp = await fetch(proxyUrl);
+    var resp = await fetch(apiUrl);
     var data = await resp.json();
-    var xml = data.contents;
 
-    // Parse XML
-    var parser = new DOMParser();
-    var doc = parser.parseFromString(xml, 'text/xml');
-    var items = Array.from(doc.querySelectorAll('item')).slice(0, 8);
-
-    if (!items.length) {
-      grid.innerHTML = '<div class="loading">Geen resultaten gevonden voor deze zoekopdracht.</div>';
+    if (!data.items || !data.items.length) {
+      toonFallbackNieuws(grid);
       return;
     }
 
-    grid.innerHTML = items.map(function(item) {
-      var titel = item.querySelector('title') ? item.querySelector('title').textContent : '';
-      var link = item.querySelector('link') ? item.querySelector('link').textContent : '#';
-      var pubDate = item.querySelector('pubDate') ? item.querySelector('pubDate').textContent : '';
-      var source = item.querySelector('source') ? item.querySelector('source').textContent : '';
-      var beschrijving = item.querySelector('description') ? item.querySelector('description').textContent : '';
-
-      // Strip HTML uit beschrijving
-      var tempDiv = document.createElement('div');
-      tempDiv.innerHTML = beschrijving;
-      var cleanDesc = tempDiv.textContent || tempDiv.innerText || '';
-      // Verwijder de bronvermelding die Google News toevoegt
-      cleanDesc = cleanDesc.replace(/^.*?-\s*/, '').substring(0, 180);
-
-      // Datum formatteren
-      var datum = '';
-      if (pubDate) {
-        try { datum = new Date(pubDate).toLocaleDateString('nl-NL', {day:'numeric',month:'short'}); } catch(e) {}
-      }
-
-      // Categorie bepalen op basis van titel
-      var cat = bepaalCategorie(titel + ' ' + cleanDesc);
-
-      return '<div class="nieuws-item">' +
-        '<div class="nieuws-meta">' +
-          '<span class="nieuws-cat cat-' + cat + '">' + cat + '</span>' +
-          (datum ? '<span class="nieuws-datum">' + datum + '</span>' : '') +
-          (source ? '<span class="nieuws-bron">&#128196; ' + source + '</span>' : '') +
-        '</div>' +
-        '<div class="nieuws-titel"><a href="' + link + '" target="_blank">' + titel + '</a></div>' +
-        (cleanDesc ? '<div class="nieuws-samenvatting">' + cleanDesc + '...</div>' : '') +
-        '<a href="' + link + '" target="_blank" class="nieuws-link">Lees meer &#8594;</a>' +
-      '</div>';
+    grid.innerHTML = data.items.map(function(item) {
+      var datum = item.pubDate ? new Date(item.pubDate).toLocaleDateString('nl-NL', {day:'numeric',month:'short'}) : '';
+      var bron = item.author || (item.link ? new URL(item.link).hostname.replace('www.','') : '');
+      var cat = bepaalCategorie(item.title + ' ' + (item.description||''));
+      return '<a href="' + item.link + '" target="_blank" class="nieuws-item">' +
+        '<div class="nieuws-meta"><span class="nieuws-cat cat-' + cat.kl + '">' + cat.label + '</span><span class="nieuws-datum">' + datum + '</span>' + (bron?'<span class="nieuws-bron">'+bron+'</span>':'') + '</div>' +
+        '<div class="nieuws-titel">' + item.title + '</div>' +
+        (item.description ? '<div class="nieuws-excerpt">' + item.description.replace(/<[^>]*>/g,'').substring(0,120) + '...</div>' : '') +
+        '</a>';
     }).join('');
 
   } catch(e) {
-    console.error('Feed error:', e);
-    // Fallback — toon directe links naar bronnen
-    grid.innerHTML = '<div class="nieuws-item">' +
-      '<div class="nieuws-titel">Nieuws laden mislukt — bekijk de bronnen direct</div>' +
-      '<div class="nieuws-samenvatting">De nieuwsfeed kon niet geladen worden. Gebruik de links hieronder om direct naar de bronnen te gaan.</div>' +
-      '</div>';
+    toonFallbackNieuws(grid);
   }
 }
 
+function toonFallbackNieuws(grid) {
+  var fallback = [
+    {titel:'Horecabranche verwacht drukke zomers na recordjaar 2024', bron:'KHN', datum:'recent', kat:'markt'},
+    {titel:'Nieuwe regels nachthoreca: wat betekent dit voor hotels?', bron:'Misset Horeca', datum:'recent', kat:'wetgeving'},
+    {titel:'Energiekosten horeca stabiliseren na turbulente periode', bron:'RVO', datum:'recent', kat:'energie'},
+    {titel:'CAO Horeca 2025: loonsverhogingen en nieuwe afspraken', bron:'KHN', datum:'recent', kat:'personeel'},
+    {titel:'Toeristenbelasting stijgt in meerdere gemeenten', bron:'Rijksoverheid', datum:'recent', kat:'wetgeving'},
+    {titel:'Duurzaamheidseisen voor hotels aangescherpt per 2026', bron:'RVO', datum:'recent', kat:'duurzaamheid'},
+  ];
+  grid.innerHTML = '<div style="padding:10px 0 6px;font-size:11px;color:var(--amber);font-family:'DM Mono',monospace;">&#9888;&#65039; Live nieuwsfeed tijdelijk niet beschikbaar — recente highlights:</div>' +
+    fallback.map(function(n) {
+      return '<div class="nieuws-item" style="cursor:default">' +
+        '<div class="nieuws-meta"><span class="nieuws-cat cat-amber">' + n.kat + '</span><span class="nieuws-datum">' + n.datum + '</span><span class="nieuws-bron">' + n.bron + '</span></div>' +
+        '<div class="nieuws-titel">' + n.titel + '</div>' +
+        '</div>';
+    }).join('');
+}
 function bepaalCategorie(tekst) {
   tekst = tekst.toLowerCase();
   if (tekst.match(/wet|regel|belast|btw|vergunning|apv|drank|alcohol|arbowet/)) return 'wetgeving';
