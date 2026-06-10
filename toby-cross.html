@@ -358,7 +358,7 @@ function maakSignaal(s) {
       '<div class="bronnen">' + bronHtml + '</div>' +
       chartHtml +
       '<div class="insight"><div class="insight-label">&#128202; Toby ziet</div><div class="insight-tekst">' + s.insight + '</div></div>' +
-      '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Vera adviseert</div><div class="aanbeveling-tekst">' + s.aanbeveling + '</div></div>' +
+      '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Toby adviseert</div><div class="aanbeveling-tekst">' + s.aanbeveling + '</div></div>' +
       '<div class="vera-row">' +
         '<input class="toby-input" placeholder="Stel Toby een vervolgvraag..." data-default="' + s.vraag + '" data-sig="' + s.actieId + '" value="' + s.vraag + '">' +
         '<button class="vera-btn" data-sig="' + s.actieId + '">Vraag Toby</button>' +
@@ -430,7 +430,7 @@ async function laadWeer() {
       '<div class="signaal-body">' +
         '<div class="bronnen"><span class="bron bron-weer">&#127782;&#65039; Open-Meteo</span><span class="bron bron-lighthouse">&#128201; Lighthouse</span></div>' +
         stripHtml + impactHtml +
-        '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Vera adviseert</div><div class="aanbeveling-tekst">' +
+        '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Toby adviseert</div><div class="aanbeveling-tekst">' +
           (eersteImpact && eersteImpact.type === 'positief'
             ? 'Bij aanhoudend mooi weer: activeer last-minute deals via OTA, zorg voor extra terrasbestelling en overweeg een dagrecreanten-pakket.'
             : 'Bij regenachtig weer verblijven gasten langer in het hotel. Overweeg een in-room dining aanbieding en check of F&B extra capaciteit aankan.') +
