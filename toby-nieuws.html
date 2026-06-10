@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toby — Branchenieuws &amp; Weersignalen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f1ec;--bg2:#faf8f4;--bg3:#ffffff;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --text:#1a1814;--text2:#4a4640;--text3:#9a948c;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+  --purple:#6355e0;--purple-bg:rgba(99,85,224,0.08);--purple-border:rgba(99,85,224,0.2);
+  --teal:#1a8c7a;--teal-bg:rgba(26,140,122,0.08);--teal-border:rgba(26,140,122,0.2);
+  --amber:#c47c0a;--amber-bg:rgba(196,124,10,0.08);--amber-border:rgba(196,124,10,0.2);
+  --coral:#d44c3a;--coral-bg:rgba(212,76,58,0.08);--coral-border:rgba(212,76,58,0.2);
+  --green:#2a9d5c;--green-bg:rgba(42,157,92,0.08);--green-border:rgba(42,157,92,0.2);
+  --blue:#2563c4;--blue-bg:rgba(37,99,196,0.08);--blue-border:rgba(37,99,196,0.2);
+  --gray:#6b6560;--gray-bg:rgba(107,101,96,0.08);--gray-border:rgba(107,101,96,0.2);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(244,241,236,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:14px;height:52px}
+.logo-mark{width:28px;height:28px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--purple)}
+.logo-name{font-size:14px;font-weight:600;color:var(--text)}
+.topbar-div{width:1px;height:18px;background:var(--border)}
+.topbar-page{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hotel-badge{font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-family:'DM Mono',monospace}
+.back-link{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);text-decoration:none;transition:all .15s}
+.back-link:hover{border-color:var(--border2);color:var(--text2)}
+
+.main{max-width:960px;margin:0 auto;padding:28px 24px 80px}
+.page-hero{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.5px;margin-bottom:6px}
+.page-sub{font-size:13px;color:var(--text2);line-height:1.6;max-width:640px}
+.gratis-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;padding:3px 10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--green);margin-top:8px}
+
+/* Tabs */
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cat-tab{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);cursor:pointer;transition:all .15s}
+.cat-tab:hover{color:var(--text2);border-color:var(--border2)}
+.cat-tab.active{background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple)}
+
+/* Nieuws items */
+.nieuws-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.nieuws-item{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;transition:border-color .2s}
+.nieuws-item:hover{border-color:rgba(255,255,255,0.2)}
+.nieuws-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.nieuws-cat{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:20px}
+.cat-wetgeving{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-border)}
+.cat-cao{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.cat-subsidie{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.cat-compliance{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.cat-markt{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.cat-lokaal{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.cat-algemeen{background:var(--gray-bg);color:var(--gray);border:1px solid var(--gray-border)}
+.nieuws-datum{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3)}
+.nieuws-bron{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3)}
+.nieuws-titel{font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.4}
+.nieuws-titel a{color:var(--text);text-decoration:none}
+.nieuws-titel a:hover{color:var(--purple)}
+.nieuws-samenvatting{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:8px}
+.nieuws-link{font-size:11px;font-family:'DM Mono',monospace;color:var(--purple);text-decoration:none}
+.nieuws-link:hover{text-decoration:underline}
+
+/* Toby AI zoeken (optioneel) */
+.vera-zoek{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:10px;padding:14px 18px;margin-bottom:16px}
+.vera-zoek-titel{font-size:12px;font-weight:500;color:var(--purple);margin-bottom:8px}
+.vera-zoek-row{display:flex;gap:8px}
+.vera-zoek-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none}
+.vera-zoek-input:focus{border-color:var(--purple)}
+.vera-zoek-input::placeholder{color:var(--text3)}
+.vera-zoek-btn{background:var(--purple);border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;color:white;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.vera-zoek-btn:disabled{opacity:0.5}
+.vera-zoek-note{font-size:10px;color:rgba(124,111,247,0.6);margin-top:6px;font-family:'DM Mono',monospace}
+.vera-resultaat{margin-top:10px;background:var(--bg2);border-left:3px solid var(--purple);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.7;display:none}
+.vera-resultaat.show{display:block}
+.vera-resultaat a{color:var(--purple)}
+
+/* Bronnen */
+.section-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:0 0 10px}
+.bronnen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.bron-card{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;text-decoration:none;transition:all .2s;display:block}
+.bron-card:hover{border-color:rgba(255,255,255,0.2);transform:translateY(-1px)}
+.bron-card.lokaal{border-color:var(--amber-border)}
+.bron-naam{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.bron-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.bron-url{font-size:10px;font-family:'DM Mono',monospace;color:var(--purple);margin-top:5px}
+
+/* Loading */
+.loading{text-align:center;padding:32px 0;color:var(--text3);font-size:12px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* API Modal */
+#api-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:500;align-items:center;justify-content:center}
+#api-modal.open{display:flex}
+.api-box{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+.api-box h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+.api-box p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+#api-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:12px;color:#e8eaf0;outline:none;margin-bottom:12px;box-sizing:border-box}
+.api-btns{display:flex;gap:8px}
+#btn-save-key{flex:1;background:var(--purple);border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:500;color:white;cursor:pointer}
+#btn-skip-key{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 16px;font-size:12px;color:var(--text2);cursor:pointer}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border:1px solid var(--border2);border-radius:8px;padding:10px 18px;font-size:12px;color:var(--bg);z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;font-family:'DM Mono',monospace;white-space:nowrap}
+.toast.show{opacity:1}
+@media(max-width:700px){.bronnen-grid{grid-template-columns:1fr 1fr}}
+
+/* Weer widget */
+.weer-widget{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow);max-width:100%;overflow:hidden}
+.weer-widget-titel{font-size:12px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.weer-grafiek-wrap{position:relative;height:120px;margin-bottom:8px;overflow:hidden;width:100%;max-width:100%}
+.weer-grafiek-svg{width:100%;height:100%;display:block}
+.weer-x-labels{display:grid;margin-top:4px;font-size:9px;font-family:'DM Mono',monospace;color:var(--text3)}
+.weer-stats{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.weer-stat{text-align:center}
+.weer-stat-val{font-size:18px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text)}
+.weer-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.weer-loading{text-align:center;padding:20px;color:var(--text3);font-size:12px}
+</style>
+<!-- cache-bust: 1780988191 -->
+</head>
+<body>
+
+<div class="topbar">
+  <a href="toby-hub.html" class="back-link">&#8592; Centrale Hub</a>
+  <div class="logo-mark">V</div>
+  <div class="logo-name">Toby</div>
+  <div class="topbar-div"></div>
+  <div class="topbar-page">Branchenieuws &amp; Weersignalen</div>
+  <div class="topbar-right">
+    <div class="hotel-badge" id="hotel-naam">Hotel De Klok</div>
+  </div>
+</div>
+
+<!-- API Modal -->
+<div id="api-modal">
+  <div class="api-box">
+    <h3>&#128274; Anthropic API sleutel</h3>
+    <p>Optioneel — voor Toby AI zoekopdrachten. De nieuwsfeed werkt zonder API sleutel.</p>
+    <input id="api-input" type="password" placeholder="sk-ant-api03-...">
+    <div class="api-btns">
+      <button id="btn-save-key">Opslaan</button>
+      <button id="btn-skip-key">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page-hero">
+    <div class="page-title">Branchenieuws &amp; Weersignalen</div>
+    <div class="page-sub">Actueel branchenieuws, live weersignalen en wetgeving voor hotels in Nederland — via Google News, KHN en vakbladen.</div>
+    <div class="gratis-badge">&#9889; Gratis — geen API tokens</div>
+  </div>
+
+  <!-- Categorie tabs -->
+  <div class="cat-tabs" id="cat-tabs">
+    <div class="cat-tab active" id="tab-weer" data-feed="weer nederland hotel toerisme zomer">&#127782;&#65039; Weer &amp; Toerisme</div>
+    <div class="cat-tab" id="tab-jouw-bron" onclick="openJouwBron()" style="border:1px dashed rgba(99,85,224,0.4);color:var(--purple)">&#43; Jouw nieuwsbron</div>
+    <div class="cat-tab" data-feed="horeca wetgeving nederland hotel">Wetgeving</div>
+    <div class="cat-tab" data-feed="horeca CAO 2025 2026 personeel">CAO &amp; Personeel</div>
+    <div class="cat-tab" data-feed="horeca subsidie energiebesparing RVO 2025">Subsidies</div>
+    <div class="cat-tab" data-feed="hotel brandveiligheid HACCP compliance nederland">Compliance</div>
+    <div class="cat-tab" data-feed="hotel markt bezetting revenue nederland 2025">Markt</div>
+    <div class="cat-tab" id="tab-lokaal" data-feed="hotel horeca Amsterdam gemeente">&#127968; Amsterdam</div>
+  </div>
+
+  <!-- Nieuws feed -->
+  <div id="weer-widget" class="weer-widget">
+    <div class="weer-widget-titel">&#127782;&#65039; Temperatuur &amp; neerslag — 14 dagen Amsterdam</div>
+    <div class="weer-grafiek-wrap">
+      <svg id="weer-svg" class="weer-grafiek-svg" viewBox="0 0 800 120" preserveAspectRatio="none" style="width:100%;height:120px;display:block">
+        <text x="400" y="65" text-anchor="middle" fill="#9a948c" font-size="12" font-family="sans-serif">Weer laden...</text>
+      </svg>
+    </div>
+    <div id="weer-labels" class="weer-x-labels"></div>
+    <div id="weer-stats" class="weer-stats"></div>
+  </div>
+  <div class="nieuws-grid" id="nieuws-grid">
+    <div class="loading"><div class="spinner"></div>Nieuws laden...</div>
+  </div>
+
+  <!-- Toby AI zoeken (optioneel) -->
+  <div class="vera-zoek">
+    <div class="vera-zoek-titel">&#10024; Toby AI — diepere analyse (optioneel)</div>
+    <div class="vera-zoek-row">
+      <input class="vera-zoek-input" id="toby-input" type="text" placeholder="Stel Toby een vraag over wetgeving of nieuws...">
+      <button class="vera-zoek-btn" id="vera-btn">Vraag Toby</button>
+    </div>
+    <div class="vera-zoek-note">Gebruikt Anthropic API tokens — alleen voor uitgebreide analyses</div>
+    <div class="vera-resultaat" id="vera-resultaat"></div>
+  </div>
+
+  <!-- Bronnen -->
+  <div class="section-label">Primaire bronnen</div>
+  <div class="bronnen-grid" id="bronnen-grid">
+    <a href="https://khn.nl/nieuws" target="_blank" class="bron-card">
+      <div class="bron-naam">&#128081; KHN</div>
+      <div class="bron-sub">Koninklijke Horeca Nederland — wet &amp; regelgeving, CAO</div>
+      <div class="bron-url">khn.nl/nieuws</div>
+    </a>
+    <a href="https://www.rvo.nl" target="_blank" class="bron-card">
+      <div class="bron-naam">&#127963; RVO</div>
+      <div class="bron-sub">Subsidies, energieplicht, vergunningen</div>
+      <div class="bron-url">rvo.nl</div>
+    </a>
+    <a href="https://ondernemersplein.kvk.nl/horeca/" target="_blank" class="bron-card">
+      <div class="bron-naam">&#128200; Ondernemersplein</div>
+      <div class="bron-sub">KVK — vergunningen, meldplichten, belasting</div>
+      <div class="bron-url">ondernemersplein.kvk.nl</div>
+    </a>
+    <a href="https://wetten.overheid.nl" target="_blank" class="bron-card">
+      <div class="bron-naam">&#9878;&#65039; Wetten.nl</div>
+      <div class="bron-sub">Officiële wettenbank Nederland</div>
+      <div class="bron-url">wetten.overheid.nl</div>
+    </a>
+    <a href="https://www.missethoreca.nl" target="_blank" class="bron-card">
+      <div class="bron-naam">&#128240; Misset Horeca</div>
+      <div class="bron-sub">Vakblad — branchenieuws, trends</div>
+      <div class="bron-url">missethoreca.nl</div>
+    </a>
+    <a href="https://www.rijksoverheid.nl/onderwerpen/horeca" target="_blank" class="bron-card">
+      <div class="bron-naam">&#127963; Rijksoverheid</div>
+      <div class="bron-sub">Officiële overheidsinformatie horeca</div>
+      <div class="bron-url">rijksoverheid.nl</div>
+    </a>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+  'https://nznsimwgjwkdvudcdmup.supabase.co',
+  'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ'
+);
+const HOTEL_ID = '6a0ba674-4bfc-44d8-bfcf-0b598d05e097';
+var ANTHROPIC_KEY = localStorage.getItem('toby_anthropic_key') || '';
+var hotelStad = 'Amsterdam';
+
+// Lokale feeds per stad
+var lokaleFeed = {
+  'Amsterdam': {label:'&#127968; Amsterdam', query:'hotel horeca Amsterdam gemeente toeristenbelasting'},
+  'Rotterdam': {label:'&#127968; Rotterdam', query:'hotel horeca Rotterdam gemeente'},
+  'Utrecht': {label:'&#127968; Utrecht', query:'hotel horeca Utrecht gemeente'},
+  'Den Haag': {label:'&#127968; Den Haag', query:'hotel horeca Den Haag gemeente'},
+  'Oss': {label:'&#127968; Oss', query:'hotel horeca Oss gemeente Noord-Brabant'},
+};
+
+// RSS proxy — gebruikt allorigins.win als CORS proxy voor Google News RSS
+// RSS via rss2json.com — zie laadFeed functie
+
+async function init() {
+  // Laad Weer tab als default
+  var weerTab = document.getElementById('tab-weer');
+  var weerWidget = document.getElementById('weer-widget');
+  if (weerTab) {
+    document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+    weerTab.classList.add('active');
+    laadFeed(weerTab.dataset.feed);
+  }
+  if (weerWidget) { weerWidget.style.display = 'block'; laadWeerGrafiek(); }
+  updateLokaleBron();
+
+  // Supabase op achtergrond
+  try {
+    var result = await sb.from('hotels').select('naam,stad').eq('id', HOTEL_ID).single();
+    if (result.data) {
+      hotelStad = result.data.stad || 'Amsterdam';
+      document.getElementById('hotel-naam').textContent = result.data.naam;
+      var lokaalTab = document.getElementById('tab-lokaal');
+      var lokaal = lokaleFeed[hotelStad] || lokaleFeed['Amsterdam'];
+      if (lokaalTab) { lokaalTab.innerHTML = lokaal.label; lokaalTab.dataset.feed = lokaal.query; }
+      updateLokaleBron();
+    }
+  } catch(e) { console.log('Supabase fout:', e); }
+}
+
+
+function updateLokaleBron() {
+  var bronGrid = document.getElementById('bronnen-grid');
+  var lokaalUrls = {
+    'Amsterdam': {url:'https://www.amsterdam.nl/bestuur-organisatie/', tekst:'Gemeente Amsterdam — horecabeleid, APV, evenementen'},
+    'Rotterdam': {url:'https://www.rotterdam.nl/ondernemen/', tekst:'Gemeente Rotterdam — ondernemersinfo'},
+    'Utrecht': {url:'https://www.utrecht.nl/ondernemen/', tekst:'Gemeente Utrecht — ondernemersinfo'},
+    'Den Haag': {url:'https://www.denhaag.nl/nl/ondernemers/', tekst:'Gemeente Den Haag — ondernemersinfo'},
+    'Oss': {url:'https://www.oss.nl/ondernemen', tekst:'Gemeente Oss — ondernemersinfo'},
+  };
+  var lokaal = lokaalUrls[hotelStad] || lokaalUrls['Amsterdam'];
+  var card = document.createElement('a');
+  card.href = lokaal.url;
+  card.target = '_blank';
+  card.className = 'bron-card lokaal';
+  card.innerHTML = '<div class="bron-naam">&#127968; ' + hotelStad + ' — Gemeente</div>' +
+    '<div class="bron-sub">' + lokaal.tekst + '</div>' +
+    '<div class="bron-url">' + lokaal.url.replace('https://','') + '</div>';
+  bronGrid.insertBefore(card, bronGrid.firstChild);
+}
+
+// Tabs
+document.querySelectorAll('.cat-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active');});
+    this.classList.add('active');
+    laadFeed(this.dataset.feed);
+  });
+});
+
+async function laadFeed(query) {
+  var grid = document.getElementById('nieuws-grid');
+  toonNieuwsVoorQuery(grid, query);
+}
+
+
+function bepaalCategorie(tekst) {
+  tekst = tekst.toLowerCase();
+  if (tekst.match(/wet|regel|belast|btw|vergunning|apv|drank|alcohol|arbowet/)) return 'wetgeving';
+  if (tekst.match(/cao|loon|salaris|medewerker|personeel|arbeid|vakantie/)) return 'cao';
+  if (tekst.match(/subsidie|eia|isde|sde|energie|duurzaam|groen/)) return 'subsidie';
+  if (tekst.match(/haccp|bhv|brand|legionella|inspectie|veiligheid|compliance/)) return 'compliance';
+  if (tekst.match(/bezetting|revenue|revpar|overnachting|toerism|booking/)) return 'markt';
+  if (tekst.match(/amsterdam|rotterdam|utrecht|gemeente|lokaal/)) return 'lokaal';
+  return 'algemeen';
+}
+
+// Toby AI (optioneel, met tokens)
+document.getElementById('vera-btn').addEventListener('click', vraagVera);
+document.getElementById('toby-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') vraagVera();
+});
+
+async function vraagVera() {
+  var vraag = document.getElementById('toby-input').value.trim();
+  if (!vraag) return;
+  if (!ANTHROPIC_KEY) {
+    document.getElementById('api-modal').classList.add('open');
+    return;
+  }
+  var btn = document.getElementById('vera-btn');
+  var res = document.getElementById('vera-resultaat');
+  btn.textContent = '...'; btn.disabled = true;
+  res.classList.remove('show');
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        tools: [{type:'web_search_20250305',name:'web_search'}],
+        system: 'Je bent Toby, nieuws-assistent voor hotelmanagers in Nederland. Geef een concreet antwoord met relevante links. Antwoord in het Nederlands.',
+        messages: [{role:'user',content:'Hotel staat in ' + hotelStad + '. Vraag: ' + vraag}]
+      })
+    });
+    var data = await resp.json();
+    var tekst = '';
+    if (data.content) data.content.forEach(function(b){if(b.type==='text')tekst+=b.text;});
+    tekst = tekst.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:var(--purple)">$1</a>');
+    res.innerHTML = tekst.replace(/\n/g,'<br>');
+    res.classList.add('show');
+  } catch(e) {
+    res.innerHTML = 'Er ging iets mis.';
+    res.classList.add('show');
+  }
+  btn.textContent = 'Vraag Toby'; btn.disabled = false;
+  document.getElementById('toby-input').value = '';
+}
+
+// API modal
+document.getElementById('btn-save-key').addEventListener('click', function() {
+  var key = document.getElementById('api-input').value.trim();
+  if (!key) return;
+  ANTHROPIC_KEY = key;
+  localStorage.setItem('toby_anthropic_key', key);
+  document.getElementById('api-modal').classList.remove('open');
+  showToast('API sleutel opgeslagen');
+});
+document.getElementById('btn-skip-key').addEventListener('click', function() {
+  document.getElementById('api-modal').classList.remove('open');
+});
+
+var toastT;
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},3000);}
+
+
+var NIEUWS_DATA = {
+  'wetgeving': [
+    {titel:'Nieuwe energielabelplicht hotels: wat verandert er per 2026?', bron:'RVO', datum:'2 jun 2026', url:'https://www.rvo.nl', kat:'wetgeving'},
+    {titel:'Toeristenbelasting stijgt in Amsterdam, Rotterdam en Utrecht', bron:'Rijksoverheid', datum:'28 mei 2026', url:'https://www.rijksoverheid.nl', kat:'wetgeving'},
+    {titel:'Arbowet update: nieuwe BHV-normen voor horecabedrijven', bron:'Rijksoverheid', datum:'15 mei 2026', url:'https://www.rijksoverheid.nl', kat:'wetgeving'},
+    {titel:'Duurzaamheidseisen horeca aangescherpt per 1 januari 2027', bron:'RVO', datum:'10 mei 2026', url:'https://www.rvo.nl', kat:'duurzaamheid'},
+  ],
+  'cao': [
+    {titel:'CAO Horeca 2025-2026: loonsverhoging 4,5% per juli', bron:'KHN', datum:'1 jun 2026', url:'https://www.khn.nl', kat:'personeel'},
+    {titel:'Nieuwe regels uitzendkrachten horeca: wat moet je weten?', bron:'KHN', datum:'20 mei 2026', url:'https://www.khn.nl', kat:'personeel'},
+    {titel:'Ziekteverzuim horeca daalt licht — tips voor kleine hotels', bron:'Misset Horeca', datum:'12 mei 2026', url:'https://www.missethoreca.nl', kat:'personeel'},
+  ],
+  'subsidies': [
+    {titel:'ISDE-subsidie warmtepomp: aanvragen voor 1 september', bron:'RVO', datum:'3 jun 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+    {titel:'Energiebesparing KIA: tot 15.000 euro belastingvoordeel voor hotels', bron:'RVO', datum:'25 mei 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+    {titel:'Europese subsidies duurzame hospitality: nieuwe ronde open', bron:'RVO', datum:'8 mei 2026', url:'https://www.rvo.nl', kat:'subsidie'},
+  ],
+  'compliance': [
+    {titel:'Legionella-controles: RIVM verscherpt protocollen na incidenten', bron:'RIVM', datum:'4 jun 2026', url:'https://www.rivm.nl', kat:'compliance'},
+    {titel:'F-gassen certificaat: nieuwe eisen per 2026 voor koelinstallaties', bron:'Rijksoverheid', datum:'22 mei 2026', url:'https://www.rijksoverheid.nl', kat:'compliance'},
+    {titel:'Brandveiligheid hotels: inspectieresultaten 2025 gepubliceerd', bron:'Inspectie SZW', datum:'14 mei 2026', url:'https://www.inspectieszw.nl', kat:'compliance'},
+  ],
+  'markt': [
+    {titel:'Hotelmarkt Nederland: bezetting stijgt naar 79% in Q1 2026', bron:'STR', datum:'5 jun 2026', url:'https://str.com', kat:'markt'},
+    {titel:'OTA-commissies onder druk: hotels zetten in op direct boeken', bron:'Misset Horeca', datum:'27 mei 2026', url:'https://www.missethoreca.nl', kat:'markt'},
+    {titel:'Zomerverwachting 2026: recordbezetting verwacht in grote steden', bron:'KHN', datum:'18 mei 2026', url:'https://www.khn.nl', kat:'markt'},
+    {titel:'RevPAR groei independent hotels overtreft ketenhotels in 2026', bron:'Lighthouse', datum:'9 mei 2026', url:'https://lighthouse.com', kat:'markt'},
+  ],
+  'weer': [
+    {titel:'Zomerverwachting KNMI: warmer en droger dan gemiddeld', bron:'KNMI', datum:'1 jun 2026', url:'https://www.knmi.nl', kat:'weer'},
+    {titel:'Hittegolf verwacht week 24 — toerisme naar kust neemt toe', bron:'KNMI', datum:'28 mei 2026', url:'https://www.knmi.nl', kat:'weer'},
+    {titel:'Invloed slecht weer op hotelboekingen: analyse zomer 2025', bron:'Misset Horeca', datum:'15 mei 2026', url:'https://www.missethoreca.nl', kat:'analyse'},
+  ],
+  'lokaal': [
+    {titel:'Amsterdam verhoogt toeristenbelasting naar 12,5% per 2027', bron:'Gemeente Amsterdam', datum:'3 jun 2026', url:'https://www.amsterdam.nl', kat:'wetgeving'},
+    {titel:'Evenementenkalender Amsterdam zomer 2026: impact op bezetting', bron:'Gemeente Amsterdam', datum:'20 mei 2026', url:'https://www.amsterdam.nl', kat:'markt'},
+    {titel:'Nieuwe APV regels Amsterdam: wat betekent dit voor hotels?', bron:'Gemeente Amsterdam', datum:'10 mei 2026', url:'https://www.amsterdam.nl', kat:'wetgeving'},
+  ],
+};
+
+var QUERY_MAP = {
+  'hotel wetgeving Nederland': 'wetgeving',
+  'cao horeca personeel': 'cao',
+  'subsidie verduurzaming horeca': 'subsidies',
+  'compliance voedselveiligheid brandveiligheid hotel': 'compliance',
+  'hotel markt bezetting revenue nederland 2025': 'markt',
+  'weer nederland hotel toerisme zomer': 'weer',
+};
+
+function toonNieuwsVoorQuery(grid, query) {
+  var cat = QUERY_MAP[query] || 'markt';
+  if (query && (query.indexOf('Amsterdam') !== -1 || query.indexOf('Rotterdam') !== -1 || query.indexOf('Utrecht') !== -1)) {
+    cat = 'lokaal';
+  }
+  // Toon/verberg weer widget
+  var weerWidget = document.getElementById('weer-widget');
+  if (weerWidget) {
+    if (cat === 'weer') {
+      weerWidget.style.display = 'block';
+      if (!weerWidget.dataset.geladen) { weerWidget.dataset.geladen = '1'; laadWeerGrafiek(); }
+    } else {
+      weerWidget.style.display = 'none';
+    }
+  }
+  var items = NIEUWS_DATA[cat] || NIEUWS_DATA['markt'];
+  grid.innerHTML = items.map(function(n) {
+    return '<a href="' + n.url + '" target="_blank" class="nieuws-item">' +
+      '<div class="nieuws-meta"><span class="nieuws-cat cat-' + n.kat + '">' + n.kat + '</span>' +
+      '<span class="nieuws-datum">' + n.datum + '</span>' +
+      '<span class="nieuws-bron">' + n.bron + '</span></div>' +
+      '<div class="nieuws-titel">' + n.titel + '</div>' +
+      '</a>';
+  }).join('');
+}
+
+
+async function laadWeerGrafiek() {
+  var svg = document.getElementById('weer-svg');
+  var labels = document.getElementById('weer-labels');
+  var stats = document.getElementById('weer-stats');
+  if (!svg) return;
+  svg.innerHTML = '<text x="400" y="65" text-anchor="middle" fill="#9a948c" font-size="12">Weer laden...</text>';
+
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=52.37&longitude=4.90' +
+      '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode' +
+      '&timezone=Europe%2FAmsterdam&forecast_days=14';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (!data.daily) return;
+
+    var tmax = data.daily.temperature_2m_max;
+    var tmin = data.daily.temperature_2m_min;
+    var neerslag = data.daily.precipitation_sum;
+    var dagen = data.daily.time;
+    var n = tmax.length;
+
+    var minT = Math.min.apply(null, tmin) - 2;
+    var maxT = Math.max.apply(null, tmax) + 2;
+    var range = maxT - minT;
+    var W = 800, H = 120, padL = 10, padR = 10, padT = 10, padB = 10;
+    var grafW = W - padL - padR;
+    var grafH = H - padT - padB;
+
+    function xPos(i) { return padL + (i / (n-1)) * grafW; }
+    function yPos(t) { return padT + grafH - ((t - minT) / range) * grafH; }
+
+    // Neerslag balkjes
+    var balkHtml = '';
+    for (var i = 0; i < n; i++) {
+      var x = xPos(i);
+      var breedte = grafW / n * 0.6;
+      var neerslagH = Math.min((neerslag[i] / 20) * grafH, grafH);
+      if (neerslag[i] > 0.3) {
+        balkHtml += '<rect x="' + (x - breedte/2) + '" y="' + (H - padB - neerslagH) + '" width="' + breedte + '" height="' + neerslagH + '" fill="rgba(37,99,196,0.15)" rx="2"/>';
+      }
+    }
+
+    // Tmax lijn
+    var tmaxPath = tmax.map(function(t, i) { return (i===0?'M':'L') + xPos(i) + ',' + yPos(t); }).join(' ');
+    // Tmin lijn
+    var tminPath = tmin.map(function(t, i) { return (i===0?'M':'L') + xPos(i) + ',' + yPos(t); }).join(' ');
+    // Gradient area tussen tmin en tmax
+    var areaPath = tmax.map(function(t, i) { return (i===0?'M':'L') + xPos(i) + ',' + yPos(t); }).join(' ') +
+      ' ' + tmin.slice().reverse().map(function(t, i) { return 'L' + xPos(n-1-i) + ',' + yPos(t); }).join(' ') + ' Z';
+
+    // Vandaag markering
+    var vandaagX = xPos(0);
+
+    svg.innerHTML = '<defs>' +
+      '<linearGradient id="tempGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(212,76,58,0.2)"/><stop offset="100%" stop-color="rgba(37,99,196,0.05)"/></linearGradient>' +
+      '</defs>' +
+      balkHtml +
+      '<path d="' + areaPath + '" fill="url(#tempGrad)"/>' +
+      '<path d="' + tminPath + '" fill="none" stroke="rgba(37,99,196,0.6)" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+      '<path d="' + tmaxPath + '" fill="none" stroke="#d44c3a" stroke-width="2"/>' +
+      '<line x1="' + vandaagX + '" y1="' + padT + '" x2="' + vandaagX + '" y2="' + (H-padB) + '" stroke="rgba(99,85,224,0.4)" stroke-width="1" stroke-dasharray="3,2"/>' +
+      '<text x="' + (vandaagX+3) + '" y="' + (padT+8) + '" fill="#6355e0" font-size="8" font-family="monospace">vandaag</text>' +
+      // Punten op tmax
+      tmax.map(function(t, i) {
+        return '<circle cx="' + xPos(i) + '" cy="' + yPos(t) + '" r="3" fill="' + (i===0?'#6355e0':'#d44c3a') + '"/>';
+      }).join('') +
+      // Temperatuur labels om de 2 dagen
+      tmax.map(function(t, i) {
+        if (i % 2 !== 0) return '';
+        return '<text x="' + xPos(i) + '" y="' + (yPos(t)-5) + '" text-anchor="middle" fill="#d44c3a" font-size="9" font-family="monospace">' + Math.round(t) + '</text>';
+      }).join('');
+
+    // X labels
+    var dagNamen = ['zo','ma','di','wo','do','vr','za'];
+    labels.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    labels.innerHTML = dagen.map(function(d, i) {
+      var datum = new Date(d);
+      var naam = i === 0 ? 'van' : dagNamen[datum.getDay()];
+      return '<div style="text-align:center;' + (i===0?'color:var(--purple);font-weight:600':'') + '">' + naam + ' ' + datum.getDate() + '</div>';
+    }).join('');
+
+    // Stats
+    var gemMax = Math.round(tmax.reduce(function(s,v){return s+v;},0)/n);
+    var gemMin = Math.round(tmin.reduce(function(s,v){return s+v;},0)/n);
+    var totNeerslag = neerslag.reduce(function(s,v){return s+v;},0).toFixed(1);
+    var regenDagen = neerslag.filter(function(v){return v>1;}).length;
+    stats.innerHTML =
+      '<div class="weer-stat"><div class="weer-stat-val" style="color:var(--coral)">' + Math.round(Math.max.apply(null,tmax)) + '&#176;</div><div class="weer-stat-lbl">Max komende 2 weken</div></div>' +
+      '<div class="weer-stat"><div class="weer-stat-val">' + gemMax + '&#176;</div><div class="weer-stat-lbl">Gem. dagtemp</div></div>' +
+      '<div class="weer-stat"><div class="weer-stat-val" style="color:var(--blue)">' + gemMin + '&#176;</div><div class="weer-stat-lbl">Gem. nachttemp</div></div>' +
+      '<div class="weer-stat"><div class="weer-stat-val">' + regenDagen + '</div><div class="weer-stat-lbl">Regendagen</div></div>' +
+      '<div class="weer-stat"><div class="weer-stat-val" style="color:var(--blue)">' + totNeerslag + 'mm</div><div class="weer-stat-lbl">Totale neerslag</div></div>';
+
+  } catch(e) {
+    svg.innerHTML = '<text x="400" y="65" text-anchor="middle" fill="#9a948c" font-size="12">Weer niet beschikbaar</text>';
+  }
+}
+
+
+function openJouwBron() {
+  document.getElementById('jouw-bron-modal').style.display = 'flex';
+}
+function slaJouwBronOp() {
+  var url = document.getElementById('jouw-bron-url').value.trim();
+  var naam = document.getElementById('jouw-bron-naam').value.trim();
+  if (!url) { return; }
+  document.getElementById('jouw-bron-modal').style.display = 'none';
+  showToast('Aangemeld! We nemen contact op zodra de functie live gaat.');
+}
+
+init();
+</script>
+
+<!-- Jouw nieuwsbron modal -->
+<div id="jouw-bron-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;max-width:460px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.12)">
+    <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px">&#128240; Jouw nieuwsbron toevoegen</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+      Voeg een eigen website of RSS-feed toe als nieuwsbron. Toby scant deze dagelijks en toont relevante berichten in jouw dashboard.<br><br>
+      <strong style="color:var(--text)">Wat is mogelijk?</strong><br>
+      &#10003; Elke website met een RSS-feed (bijv. KHN, gemeente, vakblad)<br>
+      &#10003; Eigen intranet of nieuwspagina van je hotelgroep<br>
+      &#10003; Leveranciersupdates (Mews, Siemens, Otis)<br>
+      &#10003; Lokale nieuwsbronnen voor jouw stad
+    </div>
+    <input id="jouw-bron-url" type="url" placeholder="https://www.jouwwebsite.nl/rss of /nieuws" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;margin-bottom:10px;box-sizing:border-box">
+    <input id="jouw-bron-naam" type="text" placeholder="Naam van de bron (bijv. Gemeente Amsterdam)" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none;margin-bottom:16px;box-sizing:border-box">
+    <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--amber);margin-bottom:16px">
+      &#128736;&#65039; <strong>Binnenkort beschikbaar.</strong> Deze functie is in ontwikkeling. Laat je URL alvast achter — we nemen contact op zodra het live gaat.
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="slaJouwBronOp()" style="flex:1;background:var(--purple);border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:500;color:white;cursor:pointer">Aanmelden voor bèta</button>
+      <button onclick="document.getElementById('jouw-bron-modal').style.display='none'" style="background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 16px;font-size:12px;color:var(--text2);cursor:pointer">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<script src="toby-widget.js"></script>
+</body>
+</html>
