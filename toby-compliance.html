@@ -206,7 +206,7 @@ input[type="file"]{display:none}
 <div id="api-modal">
   <div class="api-box">
     <h3>&#128274; Anthropic API sleutel</h3>
-    <p>Vul je API sleutel in om Vera documenten te laten uitlezen. Wordt alleen in je browser opgeslagen.</p>
+    <p>Vul je API sleutel in om Toby documenten te laten uitlezen. Wordt alleen in je browser opgeslagen.</p>
     <input id="api-input" type="password" placeholder="sk-ant-api03-...">
     <div class="api-btns">
       <button id="btn-save-key">Opslaan in browser</button>
@@ -236,7 +236,7 @@ input[type="file"]{display:none}
       </div>
       <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png">
       <div class="vera-result" id="vera-result">
-        <div class="vera-result-title">&#10024; Vera heeft het document herkend</div>
+        <div class="vera-result-title">&#10024; Toby heeft het document herkend</div>
         <div class="vera-field"><span class="vera-field-lbl">Type</span><span class="vera-field-val" id="vr-type">—</span></div>
         <div class="vera-field">
           <span class="vera-field-lbl">Medewerker</span>
@@ -414,7 +414,7 @@ function renderActies(acties) {
       '<div class="actie-prio ' + (a.prioriteit||'normaal') + '"></div>' +
       '<div><div class="actie-titel">' + a.titel + '</div><div class="actie-omschrijving">' + (a.compliance_items ? a.compliance_items.naam : '') + (a.omschrijving ? ' &mdash; ' + a.omschrijving.substring(0,60) : '') + '</div></div>' +
       '<div class="actie-deadline ' + datumKlasse(a.deadline) + '">' + (a.deadline ? fmtDatum(a.deadline) : '—') + '</div>' +
-      '<div class="actie-bron">' + (a.aangemaakt_door === 'vera' ? '&#10024; Vera' : '&#128100; Manager') + '</div>' +
+      '<div class="actie-bron">' + (a.aangemaakt_door === 'vera' ? '&#10024; Toby' : '&#128100; Manager') + '</div>' +
       '<div class="actie-status-tag tag-' + (a.status||'open') + '" data-id="' + a.id + '">' + actieLbl(a.status) + '</div>' +
       '</div>';
   }).join('');
@@ -521,7 +521,7 @@ async function verwerkBestand(file) {
       var data = await resp.json();
       var tekst = (data.content && data.content[0]) ? data.content[0].text : '';
       parsed = JSON.parse(tekst.replace(/```json|```/g,'').trim());
-      showToast('Vera heeft het document uitgelezen');
+      showToast('Toby heeft het document uitgelezen');
     } catch(e) { parsed = herkenBestandsnaam(file.name); }
   } else { parsed = herkenBestandsnaam(file.name); }
   pendingDoc = {parsed:parsed, pad:pad, naam:file.name, type:file.type};
