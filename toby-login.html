@@ -103,7 +103,7 @@ async function stuurLink() {
   btn.textContent = 'Versturen...';
   fout.style.display = 'none';
 
-  var redirectUrl = window.location.origin + window.location.pathname.replace('toby-login.html', 'toby-hub.html');
+  var redirectUrl = 'https://www.tobyhotel.nl/toby-hub.html';
 
   var result = await sb.auth.signInWithOtp({
     email: email,
