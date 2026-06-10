@@ -379,5 +379,6 @@ var toastT;
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},3000);}
 </script>
 <script src="toby-widget.js"></script>
+<script src="toby-auth.js"></script>
 </body>
 </html>
