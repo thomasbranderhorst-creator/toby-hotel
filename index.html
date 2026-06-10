@@ -4,183 +4,154 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Toby</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%}
 body{
-  background:#0a0a08;
+  background:#f4f1ec;
   font-family:'DM Sans',-apple-system,sans-serif;
-  color:#e8e4dc;
+  color:#1a1814;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   min-height:100vh;
-  overflow:hidden;
   position:relative;
-}
-.bg-glow{
-  position:fixed;
-  width:600px;height:600px;
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(99,85,224,0.06) 0%,transparent 70%);
-  top:50%;left:50%;
-  transform:translate(-50%,-60%);
-  pointer-events:none;
 }
 .container{
-  position:relative;
-  z-index:1;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:0;
   text-align:center;
-  padding:40px 24px;
-}
-.bird-wrap{
-  width:180px;height:180px;
-  margin-bottom:32px;
-  position:relative;
-}
-.tagline{
-  font-size:13px;
-  font-family:'DM Mono',monospace;
-  letter-spacing:0.15em;
-  color:rgba(232,228,220,0.35);
-  text-transform:uppercase;
-  margin-bottom:20px;
-}
-.headline{
-  font-size:clamp(28px,5vw,42px);
-  font-weight:300;
-  line-height:1.25;
-  letter-spacing:-0.02em;
-  color:#e8e4dc;
-  margin-bottom:14px;
+  padding:48px 24px;
   max-width:480px;
 }
-.headline em{
-  font-style:normal;
-  color:rgba(232,228,220,0.45);
+.bird-wrap{
+  width:160px;height:160px;
+  margin-bottom:36px;
+}
+.label{
+  font-size:11px;
+  font-family:'DM Mono',monospace;
+  letter-spacing:0.18em;
+  color:#b8b4ae;
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+.headline{
+  font-size:clamp(26px,4vw,38px);
+  font-weight:300;
+  line-height:1.3;
+  letter-spacing:-0.02em;
+  color:#1a1814;
+  margin-bottom:16px;
+}
+.headline i{
+  font-style:italic;
+  color:#c8c4be;
+  font-weight:300;
 }
 .sub{
-  font-size:14px;
-  color:rgba(232,228,220,0.4);
-  line-height:1.7;
-  max-width:340px;
+  font-size:13px;
+  color:#a8a49e;
+  line-height:1.8;
+  max-width:280px;
   margin-bottom:44px;
   font-weight:300;
+  letter-spacing:0.01em;
 }
 .login-btn{
   display:inline-flex;
   align-items:center;
-  gap:10px;
-  background:rgba(99,85,224,0.12);
-  border:0.5px solid rgba(99,85,224,0.35);
-  color:rgba(200,195,255,0.9);
+  gap:9px;
+  background:#ffffff;
+  border:0.5px solid rgba(0,0,0,0.12);
+  color:#5a5650;
   font-family:'DM Sans',sans-serif;
-  font-size:13px;
+  font-size:12px;
   font-weight:400;
-  letter-spacing:0.05em;
-  padding:12px 28px;
+  letter-spacing:0.06em;
+  padding:11px 28px;
   border-radius:40px;
   cursor:pointer;
   text-decoration:none;
-  transition:all .2s;
+  transition:all .18s;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
 }
 .login-btn:hover{
-  background:rgba(99,85,224,0.22);
-  border-color:rgba(99,85,224,0.6);
-  color:rgba(220,216,255,1);
-  transform:translateY(-1px);
+  border-color:rgba(99,85,224,0.3);
+  color:#6355e0;
+  box-shadow:0 2px 8px rgba(99,85,224,0.1);
 }
-.login-btn svg{
-  opacity:0.6;
-  transition:opacity .2s;
-}
-.login-btn:hover svg{opacity:1}
-.wordmark{
-  position:fixed;
-  bottom:28px;
+.wm{
+  position:absolute;
+  bottom:24px;
   left:50%;
   transform:translateX(-50%);
   font-family:'DM Mono',monospace;
-  font-size:11px;
-  letter-spacing:0.25em;
-  color:rgba(232,228,220,0.15);
+  font-size:10px;
+  letter-spacing:0.2em;
+  color:#d0cdc8;
   text-transform:uppercase;
+  white-space:nowrap;
 }
-@keyframes hover{
-  0%,100%{transform:translateY(0px) rotate(-2deg)}
-  50%{transform:translateY(-8px) rotate(2deg)}
+@keyframes drift{
+  0%,100%{transform:translate(0,0) rotate(-3deg)}
+  33%{transform:translate(3px,-7px) rotate(1deg)}
+  66%{transform:translate(-2px,-4px) rotate(-1deg)}
 }
-@keyframes wings{
-  0%,100%{d:path("M90 95 C70 75,40 65,20 70 C40 68,65 72,90 88 Z")}
-  50%{d:path("M90 95 C72 80,45 78,22 82 C42 76,67 80,90 92 Z")}
-}
-@keyframes shimmer{
-  0%{opacity:0.6}50%{opacity:1}100%{opacity:0.6}
-}
+@keyframes wl{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes wr{0%,100%{opacity:.85}50%{opacity:.6}}
 </style>
 </head>
 <body>
-
-<div class="bg-glow"></div>
-
 <div class="container">
-
   <div class="bird-wrap">
-    <svg viewBox="0 0 180 180" width="180" height="180" xmlns="http://www.w3.org/2000/svg" style="animation:hover 4s ease-in-out infinite">
-      <!-- Staartveeren -->
-      <path d="M88 130 C80 148,68 158,58 162 C70 155,82 145,88 130 Z" fill="rgba(99,85,224,0.5)"/>
-      <path d="M92 130 C94 150,98 162,105 168 C100 156,94 145,92 130 Z" fill="rgba(99,85,224,0.35)"/>
-      <path d="M86 132 C75 152,60 165,48 168 C63 158,78 148,86 132 Z" fill="rgba(99,85,224,0.25)"/>
+    <svg viewBox="0 0 160 160" width="160" height="160" xmlns="http://www.w3.org/2000/svg" style="animation:drift 5s ease-in-out infinite">
+      <!-- Bloem die de kolibri bezoekt — subtiel -->
+      <circle cx="22" cy="118" r="3" fill="#e8c4a0" opacity="0.5"/>
+      <circle cx="18" cy="113" r="2" fill="#e8c4a0" opacity="0.4"/>
+      <circle cx="26" cy="112" r="2" fill="#e8c4a0" opacity="0.4"/>
+      <circle cx="22" cy="108" r="2" fill="#e8c4a0" opacity="0.4"/>
+      <line x1="22" y1="121" x2="22" y2="134" stroke="#c8d4a8" stroke-width="1" opacity="0.5"/>
+      <!-- Staart -->
+      <path d="M76 115 C68 132,54 142,44 144" stroke="#b4a8e0" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <path d="M80 117 C76 135,76 148,78 154" stroke="#c0b8e8" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <path d="M74 116 C62 134,48 146,38 150" stroke="#c8c0ec" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.35"/>
       <!-- Lichaam -->
-      <ellipse cx="90" cy="105" rx="16" ry="28" fill="rgba(130,118,240,0.9)" transform="rotate(-15,90,105)"/>
-      <!-- Buik -->
-      <ellipse cx="94" cy="110" rx="10" ry="18" fill="rgba(200,195,255,0.15)" transform="rotate(-15,94,110)"/>
-      <!-- Vleugel links (achter) -->
-      <path d="M82 100 C58 82,32 78,18 85 C36 80,62 86,82 98 Z" fill="rgba(80,65,200,0.7)" style="animation:shimmer 3s ease-in-out infinite"/>
-      <!-- Vleugel rechts (voor) -->
-      <path d="M98 97 C118 78,144 72,160 78 C142 74,120 82,100 96 Z" fill="rgba(110,95,230,0.85)" style="animation:shimmer 3s ease-in-out infinite 0.3s"/>
+      <ellipse cx="82" cy="96" rx="14" ry="24" fill="#9890d8" transform="rotate(-18,82,96)"/>
+      <!-- Buikvlek -->
+      <ellipse cx="86" cy="100" rx="8" ry="15" fill="#f0eefc" opacity="0.25" transform="rotate(-18,86,100)"/>
+      <!-- Vleugel links -->
+      <path d="M74 90 C52 70,28 66,14 74 C32 68,56 76,74 88 Z" fill="#7068c4" opacity="0.75" style="animation:wl 2.8s ease-in-out infinite"/>
+      <!-- Vleugel rechts -->
+      <path d="M90 88 C112 68,136 62,150 70 C132 65,110 74,92 86 Z" fill="#8880cc" opacity="0.85" style="animation:wr 2.8s ease-in-out infinite .2s"/>
       <!-- Nek -->
-      <ellipse cx="90" cy="80" rx="10" ry="14" fill="rgba(99,85,224,0.95)" transform="rotate(-10,90,80)"/>
-      <!-- Keel glans -->
-      <ellipse cx="92" cy="83" rx="6" ry="8" fill="rgba(180,60,120,0.7)" transform="rotate(-10,92,83)" style="animation:shimmer 2.5s ease-in-out infinite 0.5s"/>
+      <ellipse cx="82" cy="72" rx="9" ry="13" fill="#8880cc" transform="rotate(-12,82,72)"/>
+      <!-- Keelglans (robijnrood) -->
+      <ellipse cx="84" cy="76" rx="5" ry="7" fill="#c84870" opacity="0.65" transform="rotate(-12,84,76)"/>
       <!-- Hoofd -->
-      <ellipse cx="90" cy="64" rx="13" ry="13" fill="rgba(85,70,210,0.95)"/>
-      <!-- Oogglans -->
-      <circle cx="94" cy="61" r="3.5" fill="#1a1820"/>
-      <circle cx="95.2" cy="59.8" r="1.2" fill="rgba(255,255,255,0.7)"/>
-      <!-- Snavel -->
-      <path d="M97 65 L126 60 L97 68 Z" fill="rgba(200,190,150,0.9)" stroke="none"/>
-      <path d="M97 65 L126 60 L97 67 Z" fill="rgba(180,170,130,0.7)"/>
-      <!-- Pootjes -->
-      <line x1="86" y1="128" x2="80" y2="142" stroke="rgba(180,170,130,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="92" y1="128" x2="90" y2="143" stroke="rgba(180,170,130,0.5)" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="80" y1="142" x2="75" y2="145" stroke="rgba(180,170,130,0.4)" stroke-width="1" stroke-linecap="round"/>
-      <line x1="80" y1="142" x2="82" y2="146" stroke="rgba(180,170,130,0.4)" stroke-width="1" stroke-linecap="round"/>
-      <!-- Subtiele glinstering -->
-      <ellipse cx="85" cy="98" rx="4" ry="8" fill="rgba(200,195,255,0.08)" transform="rotate(-15,85,98)"/>
+      <circle cx="82" cy="57" r="12" fill="#7870c0"/>
+      <!-- Oog -->
+      <circle cx="86" cy="54" r="3" fill="#2c2840"/>
+      <circle cx="87.2" cy="52.8" r="1" fill="rgba(255,255,255,0.65)"/>
+      <!-- Snavel — lang en gebogen voor kolibri -->
+      <path d="M91 59 Q110 54 128 52" stroke="#c8bc8c" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M91 60 Q110 57 128 56" stroke="#b8ac7c" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.6"/>
+      <!-- Glinstering op rug -->
+      <ellipse cx="78" cy="88" rx="3" ry="9" fill="rgba(255,255,255,0.08)" transform="rotate(-18,78,88)"/>
     </svg>
   </div>
 
-  <div class="tagline">Hotel intelligence</div>
-
-  <h1 class="headline">Alles in zicht.<br><em>Altijd.</em></h1>
-
-  <p class="sub">Toby verbindt de systemen die jouw hotel draait — en geeft je de helikopterview die je verdient.</p>
-
+  <div class="label">tobyhotel.nl</div>
+  <h1 class="headline">Niet voor iedereen.<br><i>Wel voor jou.</i></h1>
+  <p class="sub">Voor wie het verschil ziet tussen data en inzicht.</p>
   <a href="toby-hub.html" class="login-btn">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     Inloggen
   </a>
-
 </div>
-
-<div class="wordmark">Toby · Hotel Intelligence</div>
-
+<div class="wm">Toby</div>
 </body>
 </html>
