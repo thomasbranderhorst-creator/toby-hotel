@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toby — Installaties &amp; Contracten</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f1ec;--bg2:#faf8f4;--bg3:#ffffff;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --text:#1a1814;--text2:#4a4640;--text3:#9a948c;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 12px rgba(0,0,0,0.08);
+  --purple:#6355e0;--purple-bg:rgba(99,85,224,0.08);--purple-border:rgba(99,85,224,0.2);
+  --green:#2a9d5c;--green-bg:rgba(42,157,92,0.08);--green-border:rgba(42,157,92,0.2);
+  --amber:#c47c0a;--amber-bg:rgba(196,124,10,0.08);--amber-border:rgba(196,124,10,0.2);
+  --coral:#d44c3a;--coral-bg:rgba(212,76,58,0.08);--coral-border:rgba(212,76,58,0.2);
+  --blue:#2563c4;--blue-bg:rgba(37,99,196,0.08);--blue-border:rgba(37,99,196,0.2);
+  --gray:#6b6560;--gray-bg:rgba(107,101,96,0.08);--gray-border:rgba(107,101,96,0.2);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(244,241,236,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:14px;height:52px;box-shadow:var(--shadow)}
+.logo-mark{width:28px;height:28px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--purple)}
+.logo-name{font-size:14px;font-weight:600;color:var(--text)}
+.topbar-div{width:1px;height:18px;background:var(--border2)}
+.topbar-page{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hotel-badge{font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-family:'DM Mono',monospace;box-shadow:var(--shadow)}
+.back-link{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);text-decoration:none;transition:all .15s;box-shadow:var(--shadow)}
+.back-link:hover{border-color:var(--purple-border);color:var(--purple)}
+.api-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);cursor:pointer;box-shadow:var(--shadow)}
+
+.main{max-width:960px;margin:0 auto;padding:28px 24px 80px}
+
+/* Tabs */
+.nav-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;box-shadow:var(--shadow)}
+.nav-tab{flex:1;text-align:center;padding:8px 14px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-radius:7px;transition:all .15s}
+.nav-tab.active{background:var(--bg3);color:var(--text);box-shadow:var(--shadow)}
+.tab-view{display:none}
+.tab-view.active{display:block}
+
+/* Summary strip */
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.sum-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+.sum-val{font-size:28px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);margin-bottom:3px}
+.sum-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.sum-card.groen{border-color:var(--green-border)}.sum-card.groen .sum-val{color:var(--green)}
+.sum-card.amber{border-color:var(--amber-border)}.sum-card.amber .sum-val{color:var(--amber)}
+.sum-card.rood{border-color:var(--coral-border)}.sum-card.rood .sum-val{color:var(--coral)}
+
+/* Vera proactief signaal */
+.vera-proactief{border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow)}
+.vera-proactief.urgent{background:var(--coral-bg);border:1px solid var(--coral-border)}
+.vera-proactief.aandacht{background:var(--amber-bg);border:1px solid var(--amber-border)}
+.vera-proactief.goed{background:var(--green-bg);border:1px solid var(--green-border)}
+.vera-proactief-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.vera-proactief-content{flex:1}
+.vera-proactief-titel{font-size:13px;font-weight:600;margin-bottom:4px}
+.vera-proactief.urgent .vera-proactief-titel{color:var(--coral)}
+.vera-proactief.aandacht .vera-proactief-titel{color:var(--amber)}
+.vera-proactief.goed .vera-proactief-titel{color:var(--green)}
+.vera-proactief-tekst{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.vera-proactief-acties{display:flex;gap:8px;flex-wrap:wrap}
+.vp-btn{border:none;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.vp-btn.prim{background:var(--purple);color:white}
+.vp-btn.sec{background:var(--bg3);border:1px solid var(--border2);color:var(--text2)}
+.vp-btn.prim:hover{background:#5448c8}
+.vp-btn.sec:hover{border-color:var(--purple-border);color:var(--purple)}
+
+/* Installatie items */
+.inst-grid{display:flex;flex-direction:column;gap:6px}
+.inst-row{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:24px 1fr 140px 120px 100px;gap:12px;align-items:center;cursor:pointer;transition:border-color .2s;box-shadow:var(--shadow)}
+.inst-row:hover{border-color:var(--border2)}
+.inst-row.verlopen{border-color:var(--coral-border)}
+.inst-row.binnenkort{border-color:var(--amber-border)}
+.inst-row.niet-bevestigd{border-color:var(--amber-border);background:var(--amber-bg)}
+.inst-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-groen{background:var(--green)}
+.dot-amber{background:var(--amber)}
+.dot-rood{background:var(--coral)}
+.dot-grijs{background:var(--gray)}
+.inst-naam{font-size:13px;font-weight:500;color:var(--text)}
+.inst-leverancier{font-size:11px;color:var(--text3);margin-top:2px}
+.inst-datum{font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);text-align:right}
+.inst-datum.verlopen{color:var(--coral)}
+.inst-datum.binnenkort{color:var(--amber)}
+.inst-kosten{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);text-align:right}
+.inst-tag{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;text-align:center}
+.tag-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.tag-verlopen{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-border)}
+.tag-binnenkort{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.tag-niet-bevestigd{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.tag-gepland{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+
+/* Contract kaarten */
+.contract-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.contract-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow)}
+.contract-card.verloopt{border-color:var(--amber-border)}
+.contract-naam{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.contract-leverancier{font-size:12px;color:var(--text2);margin-bottom:10px}
+.contract-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.contract-row:last-of-type{border-bottom:none}
+.contract-lbl{color:var(--text3)}
+.contract-val{font-family:'DM Mono',monospace;color:var(--text2);font-size:11px}
+.contract-val.alert{color:var(--amber)}
+.contract-acties{display:flex;gap:6px;margin-top:12px}
+.contract-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s}
+.contract-btn:hover{border-color:var(--purple-border);color:var(--purple)}
+
+/* Upload panel */
+.upload-panel{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:12px;padding:18px 22px;margin-bottom:20px;box-shadow:var(--shadow)}
+.upload-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:5px}
+.upload-sub{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.upload-zone{border:2px dashed var(--purple-border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover{border-color:var(--purple);background:rgba(99,85,224,0.05)}
+.upload-icon{font-size:22px;margin-bottom:6px}
+.upload-tekst{font-size:12px;color:var(--text2)}
+.upload-link{color:var(--purple);cursor:pointer}
+
+/* Bevestig modal */
+#bevestig-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:500;align-items:center;justify-content:center}
+#bevestig-modal.open{display:flex}
+.modal-box{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;max-width:460px;width:90%;box-shadow:var(--shadow-md)}
+.modal-titel{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.modal-opties{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.modal-optie{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
+.modal-optie:hover{border-color:var(--purple-border)}
+.modal-optie-icon{font-size:18px;flex-shrink:0}
+.modal-optie-tekst{font-size:12px;font-weight:500;color:var(--text)}
+.modal-optie-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.modal-sluiten{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:9px 18px;font-size:12px;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+.section-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:16px 0 10px}
+.loading{text-align:center;padding:28px 0;color:var(--text3);font-size:12px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;color:var(--bg);z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;font-family:'DM Mono',monospace;white-space:nowrap}
+.toast.show{opacity:1}
+input[type="file"]{display:none}
+@media(max-width:700px){.summary-strip{grid-template-columns:1fr 1fr}.inst-row{grid-template-columns:16px 1fr 80px}.inst-datum,.inst-kosten{display:none}.contract-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="toby-hub.html" class="back-link">&#8592; Centrale Hub</a>
+  <div class="logo-mark">V</div>
+  <div class="logo-name">Toby</div>
+  <div class="topbar-div"></div>
+  <div class="topbar-page">Installaties &amp; Contracten</div>
+  <div class="topbar-right">
+    <div class="hotel-badge">Hotel De Klok</div>
+    <button class="api-btn" id="api-status-btn">API: —</button>
+  </div>
+</div>
+
+<!-- Bevestig modal -->
+<div id="bevestig-modal">
+  <div class="modal-box">
+    <div class="modal-titel" id="modal-titel">Onderhoud bevestigen</div>
+    <div class="modal-sub" id="modal-sub">Hoe wil je dit onderhoud registreren?</div>
+    <div class="modal-opties">
+      <div class="modal-optie" onclick="bevestigSnel()">
+        <div class="modal-optie-icon">&#10003;</div>
+        <div>
+          <div class="modal-optie-tekst">Ja, onderhoud is uitgevoerd</div>
+          <div class="modal-optie-sub">Vera markeert als gedaan en plant volgende keuring</div>
+        </div>
+      </div>
+      <div class="modal-optie" onclick="uploadDoc()">
+        <div class="modal-optie-icon">&#128229;</div>
+        <div>
+          <div class="modal-optie-tekst">Upload intekenblad of rapport</div>
+          <div class="modal-optie-sub">Foto van de intekenlijst in de lift of het servicerapport</div>
+        </div>
+      </div>
+      <div class="modal-optie" onclick="planOpnieuw()">
+        <div class="modal-optie-icon">&#128197;</div>
+        <div>
+          <div class="modal-optie-tekst">Nog niet uitgevoerd — nieuwe datum plannen</div>
+          <div class="modal-optie-sub">Toby stuurt een herinnering op de nieuwe datum</div>
+        </div>
+      </div>
+    </div>
+    <button class="modal-sluiten" onclick="document.getElementById('bevestig-modal').classList.remove('open')">Annuleren</button>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png">
+
+<div class="main">
+
+  <!-- Summary -->
+  <div class="summary-strip">
+    <div class="sum-card groen"><div class="sum-val">4</div><div class="sum-lbl">In orde</div></div>
+    <div class="sum-card amber"><div class="sum-val">2</div><div class="sum-lbl">Niet bevestigd</div></div>
+    <div class="sum-card amber"><div class="sum-val">1</div><div class="sum-lbl">Binnenkort</div></div>
+    <div class="sum-card"><div class="sum-val" style="font-size:18px;margin-top:4px">€8.640</div><div class="sum-lbl">Contractkosten/jaar</div></div>
+  </div>
+
+  <!-- Vera proactieve signalen -->
+  <div class="vera-proactief niet-bevestigd aandacht">
+    <div class="vera-proactief-icon">&#10024;</div>
+    <div class="vera-proactief-content">
+      <div class="vera-proactief-titel">Liftonderhoud 5 dagen geleden gepland — nog niet bevestigd</div>
+      <div class="vera-proactief-tekst">Het jaarlijks liftonderhoud door Otis was gepland op 3 juni. Je hebt ze gezien, maar de registratie staat nog open. Één klik om te bevestigen — of upload het intekenblad uit de lift.</div>
+      <div class="vera-proactief-acties">
+        <button class="vp-btn prim" onclick="openBevestig('Liftonderhoud', 'Otis — jaarlijks onderhoud')">&#10003; Bevestigen</button>
+        <button class="vp-btn sec" onclick="document.getElementById('file-input').click()">&#128229; Upload intekenblad</button>
+        <button class="vp-btn sec">&#128197; Andere datum</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="vera-proactief niet-bevestigd aandacht">
+    <div class="vera-proactief-icon">&#10024;</div>
+    <div class="vera-proactief-content">
+      <div class="vera-proactief-titel">F-gassen controle koelinstallatie — datum onbekend</div>
+      <div class="vera-proactief-tekst">De wettelijk verplichte F-gassen controle staat op het compliance schema maar heeft nog geen bevestigingsdatum. Wie doet dit voor jullie? Vera kan de volgende controle bijhouden zodra je dit registreert.</div>
+      <div class="vera-proactief-acties">
+        <button class="vp-btn prim" onclick="openBevestig('F-gassen controle', 'Koelinstallatie keuken')">&#10003; Registreren</button>
+        <button class="vp-btn sec">&#128229; Upload certificaat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-view="installaties">Installaties</div>
+    <div class="nav-tab" data-view="contracten">Contracten</div>
+    <div class="nav-tab" data-view="upload">Document uploaden</div>
+  </div>
+
+  <!-- Tab: Installaties -->
+  <div class="tab-view active" id="view-installaties">
+    <div class="inst-grid">
+
+      <div class="inst-row niet-bevestigd" onclick="openBevestig('Liftonderhoud','Otis — jaarlijks onderhoud')">
+        <div class="inst-dot dot-amber"></div>
+        <div><div class="inst-naam">Lift — jaarlijks onderhoud</div><div class="inst-leverancier">Otis &middot; contract loopt t/m dec 2026</div></div>
+        <div class="inst-datum binnenkort">Gepland: 3 jun 2026</div>
+        <div class="inst-kosten">&euro;1.240/jaar</div>
+        <div class="inst-tag tag-niet-bevestigd">Niet bevestigd</div>
+      </div>
+
+      <div class="inst-row" onclick="openBevestig('CV-ketelonderhoud','Remeha Service')">
+        <div class="inst-dot dot-groen"></div>
+        <div><div class="inst-naam">CV-ketel — jaarlijks onderhoud</div><div class="inst-leverancier">Remeha Service &middot; contract loopt t/m sep 2026</div></div>
+        <div class="inst-datum">Laatste: 14 feb 2026</div>
+        <div class="inst-kosten">&euro;680/jaar</div>
+        <div class="inst-tag tag-ok">In orde</div>
+      </div>
+
+      <div class="inst-row">
+        <div class="inst-dot dot-groen"></div>
+        <div><div class="inst-naam">Brandmeldinstallatie — halfjaarscheck</div><div class="inst-leverancier">Siemens Building Technologies</div></div>
+        <div class="inst-datum">Laatste: 2 apr 2026</div>
+        <div class="inst-kosten">&euro;920/jaar</div>
+        <div class="inst-tag tag-ok">In orde</div>
+      </div>
+
+      <div class="inst-row binnenkort">
+        <div class="inst-dot dot-amber"></div>
+        <div><div class="inst-naam">Elektrische installatiekeuring (NEN 1010)</div><div class="inst-leverancier">Keuringsinstituut Nederland &middot; 5-jaarlijks</div></div>
+        <div class="inst-datum binnenkort">Volgende: aug 2026</div>
+        <div class="inst-kosten">&euro;1.800/5jr</div>
+        <div class="inst-tag tag-binnenkort">Over 2 mnd</div>
+      </div>
+
+      <div class="inst-row niet-bevestigd" onclick="openBevestig('F-gassen controle','Koelinstallatie keuken')">
+        <div class="inst-dot dot-amber"></div>
+        <div><div class="inst-naam">F-gassen controle koelinstallatie</div><div class="inst-leverancier">Verplicht per EU F-gassenverordening</div></div>
+        <div class="inst-datum verlopen">Datum onbekend</div>
+        <div class="inst-kosten">&euro;380/jaar</div>
+        <div class="inst-tag tag-niet-bevestigd">Registreer</div>
+      </div>
+
+      <div class="inst-row">
+        <div class="inst-dot dot-groen"></div>
+        <div><div class="inst-naam">HVAC — luchtbehandeling</div><div class="inst-leverancier">Imtech &middot; kwartaalonderhoud</div></div>
+        <div class="inst-datum">Laatste: 18 mei 2026</div>
+        <div class="inst-kosten">&euro;2.400/jaar</div>
+        <div class="inst-tag tag-ok">In orde</div>
+      </div>
+
+      <div class="inst-row">
+        <div class="inst-dot dot-groen"></div>
+        <div><div class="inst-naam">Elektrische schuifdeuren — onderhoud</div><div class="inst-leverancier">ASSA ABLOY &middot; halfjaarlijks</div></div>
+        <div class="inst-datum">Laatste: 8 mrt 2026</div>
+        <div class="inst-kosten">&euro;540/jaar</div>
+        <div class="inst-tag tag-gepland">Volgende: sep 2026</div>
+      </div>
+
+      <div class="inst-row">
+        <div class="inst-dot dot-groen"></div>
+        <div><div class="inst-naam">Noodstroomaggregaat — jaarlijkse test</div><div class="inst-leverancier">Cummins Power &middot; contractonderhoud</div></div>
+        <div class="inst-datum">Laatste: 11 jan 2026</div>
+        <div class="inst-kosten">&euro;680/jaar</div>
+        <div class="inst-tag tag-ok">In orde</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tab: Contracten -->
+  <div class="tab-view" id="view-contracten">
+    <div class="contract-grid">
+
+      <div class="contract-card">
+        <div class="contract-naam">&#128295; Otis Liftonderhoud</div>
+        <div class="contract-leverancier">Otis Elevator Company Nederland</div>
+        <div class="contract-row"><span class="contract-lbl">Contactpersoon</span><span class="contract-val">Jan de Vries — 06-12345678</span></div>
+        <div class="contract-row"><span class="contract-lbl">Contractnummer</span><span class="contract-val">OT-2024-4821</span></div>
+        <div class="contract-row"><span class="contract-lbl">Looptijd</span><span class="contract-val">jan 2024 — dec 2026</span></div>
+        <div class="contract-row"><span class="contract-lbl">Jaarkosten</span><span class="contract-val">&euro;1.240 excl. BTW</span></div>
+        <div class="contract-row"><span class="contract-lbl">Frequentie</span><span class="contract-val">1x per jaar</span></div>
+        <div class="contract-row"><span class="contract-lbl">Verlengd</span><span class="contract-val alert">&#9888;&#65039; Loopt af dec 2026</span></div>
+        <div class="contract-acties">
+          <button class="contract-btn">&#128196; Contract bekijken</button>
+          <button class="contract-btn">&#9998; Bewerken</button>
+        </div>
+      </div>
+
+      <div class="contract-card">
+        <div class="contract-naam">&#127804; Imtech HVAC</div>
+        <div class="contract-leverancier">Imtech Nederland B.V.</div>
+        <div class="contract-row"><span class="contract-lbl">Contactpersoon</span><span class="contract-val">Maria Smit — 020-5551234</span></div>
+        <div class="contract-row"><span class="contract-lbl">Contractnummer</span><span class="contract-val">IM-2023-9041</span></div>
+        <div class="contract-row"><span class="contract-lbl">Looptijd</span><span class="contract-val">mrt 2023 — mrt 2027</span></div>
+        <div class="contract-row"><span class="contract-lbl">Jaarkosten</span><span class="contract-val">&euro;2.400 excl. BTW</span></div>
+        <div class="contract-row"><span class="contract-lbl">Frequentie</span><span class="contract-val">4x per jaar</span></div>
+        <div class="contract-row"><span class="contract-lbl">Verlengd</span><span class="contract-val">&#10003; Automatisch verlengd</span></div>
+        <div class="contract-acties">
+          <button class="contract-btn">&#128196; Contract bekijken</button>
+          <button class="contract-btn">&#9998; Bewerken</button>
+        </div>
+      </div>
+
+      <div class="contract-card verloopt">
+        <div class="contract-naam">&#128293; Siemens Brandmeld</div>
+        <div class="contract-leverancier">Siemens Building Technologies</div>
+        <div class="contract-row"><span class="contract-lbl">Contactpersoon</span><span class="contract-val">Peter Bakker — 030-2345678</span></div>
+        <div class="contract-row"><span class="contract-lbl">Contractnummer</span><span class="contract-val">SBT-2022-1142</span></div>
+        <div class="contract-row"><span class="contract-lbl">Looptijd</span><span class="contract-val">jan 2022 — dec 2026</span></div>
+        <div class="contract-row"><span class="contract-lbl">Jaarkosten</span><span class="contract-val">&euro;920 excl. BTW</span></div>
+        <div class="contract-row"><span class="contract-lbl">Frequentie</span><span class="contract-val">2x per jaar</span></div>
+        <div class="contract-row"><span class="contract-lbl">Verlengd</span><span class="contract-val alert">&#9888;&#65039; Beslissing nodig voor okt 2026</span></div>
+        <div class="contract-acties">
+          <button class="contract-btn">&#128196; Contract bekijken</button>
+          <button class="contract-btn" style="color:var(--amber);border-color:var(--amber-border)">&#128197; Verlenging plannen</button>
+        </div>
+      </div>
+
+      <div class="contract-card">
+        <div class="contract-naam">&#128170; Remeha CV-service</div>
+        <div class="contract-leverancier">Remeha Service Nederland</div>
+        <div class="contract-row"><span class="contract-lbl">Contactpersoon</span><span class="contract-val">Service — 0800-7362342</span></div>
+        <div class="contract-row"><span class="contract-lbl">Contractnummer</span><span class="contract-val">REM-2024-0318</span></div>
+        <div class="contract-row"><span class="contract-lbl">Looptijd</span><span class="contract-val">sep 2024 — sep 2026</span></div>
+        <div class="contract-row"><span class="contract-lbl">Jaarkosten</span><span class="contract-val">&euro;680 excl. BTW</span></div>
+        <div class="contract-row"><span class="contract-lbl">Frequentie</span><span class="contract-val">1x per jaar</span></div>
+        <div class="contract-row"><span class="contract-lbl">Verlengd</span><span class="contract-val alert">&#9888;&#65039; Loopt af sep 2026</span></div>
+        <div class="contract-acties">
+          <button class="contract-btn">&#128196; Contract bekijken</button>
+          <button class="contract-btn">&#9998; Bewerken</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tab: Upload -->
+  <div class="tab-view" id="view-upload">
+    <div class="upload-panel">
+      <div class="upload-title">&#128441;&#65039; Document uploaden</div>
+      <div class="upload-sub">Sleep een servicerapport, intekenblad, certificaat of contract hierin. Toby herkent het type en koppelt het aan de juiste installatie.</div>
+      <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">&#128229;</div>
+        <div class="upload-tekst">Sleep een bestand hierin of <span class="upload-link">klik om te uploaden</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var ANTHROPIC_KEY = localStorage.getItem('toby_anthropic_key') || '';
+var actieveInstallatie = null;
+
+// Tabs
+document.querySelectorAll('.nav-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-view').forEach(function(v) { v.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('view-' + this.dataset.view).classList.add('active');
+  });
+});
+
+// API status
+var btn = document.getElementById('api-status-btn');
+btn.textContent = ANTHROPIC_KEY ? 'API: actief' : 'API: niet ingesteld';
+btn.style.color = ANTHROPIC_KEY ? 'var(--green)' : '';
+
+// Bevestig modal
+function openBevestig(naam, omschrijving) {
+  actieveInstallatie = {naam: naam, omschrijving: omschrijving};
+  document.getElementById('modal-titel').textContent = naam + ' — bevestigen';
+  document.getElementById('modal-sub').textContent = omschrijving + '. Hoe wil je dit registreren?';
+  document.getElementById('bevestig-modal').classList.add('open');
+}
+
+function bevestigSnel() {
+  document.getElementById('bevestig-modal').classList.remove('open');
+  showToast('Bevestigd — volgende onderhoud ingepland door Vera');
+  // In de echte versie: update Supabase
+}
+
+function uploadDoc() {
+  document.getElementById('bevestig-modal').classList.remove('open');
+  document.getElementById('file-input').click();
+}
+
+function planOpnieuw() {
+  document.getElementById('bevestig-modal').classList.remove('open');
+  showToast('Herinnering ingepland — Toby stuurt een signaal op de nieuwe datum');
+}
+
+// File upload
+document.getElementById('file-input').addEventListener('change', function() {
+  if (this.files[0]) {
+    showToast('Toby analyseert ' + this.files[0].name + '...');
+    setTimeout(function() { showToast('Document herkend en gekoppeld aan installatie'); }, 2000);
+  }
+});
+
+var toastT;
+function showToast(msg) {
+  var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+</script>
+<script src="toby-widget.js"></script>
+</body>
+</html>
