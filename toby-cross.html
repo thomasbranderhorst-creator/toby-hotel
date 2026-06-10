@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toby — Cross-discipline signalen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f1ec;--bg2:#faf8f4;--bg3:#ffffff;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.12);
+  --text:#1a1814;--text2:#4a4640;--text3:#9a948c;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);
+  --purple:#6355e0;--purple-bg:rgba(99,85,224,0.08);--purple-border:rgba(99,85,224,0.2);
+  --teal:#1a8c7a;--teal-bg:rgba(26,140,122,0.08);--teal-border:rgba(26,140,122,0.2);
+  --amber:#c47c0a;--amber-bg:rgba(196,124,10,0.08);--amber-border:rgba(196,124,10,0.2);
+  --coral:#d44c3a;--coral-bg:rgba(212,76,58,0.08);--coral-border:rgba(212,76,58,0.2);
+  --green:#2a9d5c;--green-bg:rgba(42,157,92,0.08);--green-border:rgba(42,157,92,0.2);
+  --blue:#2563c4;--blue-bg:rgba(37,99,196,0.08);--blue-border:rgba(37,99,196,0.2);
+  --gray:#6b6560;--gray-bg:rgba(107,101,96,0.08);--gray-border:rgba(107,101,96,0.2);
+}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(244,241,236,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:14px;height:52px;box-shadow:var(--shadow)}
+.logo-mark{width:28px;height:28px;border-radius:6px;background:var(--purple-bg);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--purple)}
+.logo-name{font-size:14px;font-weight:600;color:var(--text)}
+.topbar-div{width:1px;height:18px;background:var(--border2)}
+.topbar-page{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hotel-badge{font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-family:'DM Mono',monospace;box-shadow:var(--shadow)}
+.back-link{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);text-decoration:none;transition:all .15s;box-shadow:var(--shadow)}
+.back-link:hover{border-color:var(--purple-border);color:var(--purple)}
+.api-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);cursor:pointer;box-shadow:var(--shadow)}
+
+.main{max-width:960px;margin:0 auto;padding:28px 24px 80px}
+.page-title{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.5px;margin-bottom:6px}
+.page-sub{font-size:13px;color:var(--text2);line-height:1.6;max-width:640px;margin-bottom:24px}
+
+/* Signaal kaart */
+.signaal{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+.signaal.urgent{border-color:var(--coral-border)}
+.signaal.aandacht{border-color:var(--amber-border)}
+.signaal.info{border-color:var(--blue-border)}
+.signaal.goed{border-color:var(--green-border)}
+
+.signaal-header{padding:16px 20px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border)}
+.signaal-ind{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ind-urgent{background:var(--coral-bg);border:1px solid var(--coral-border)}
+.ind-aandacht{background:var(--amber-bg);border:1px solid var(--amber-border)}
+.ind-info{background:var(--blue-bg);border:1px solid var(--blue-border)}
+.ind-goed{background:var(--green-bg);border:1px solid var(--green-border)}
+.signaal-type{font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.signaal-type.urgent{color:var(--coral)}
+.signaal-type.aandacht{color:var(--amber)}
+.signaal-type.info{color:var(--blue)}
+.signaal-type.goed{color:var(--green)}
+.signaal-titel{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
+.signaal-sub{font-size:12px;color:var(--text2);line-height:1.5}
+
+.signaal-body{padding:16px 20px}
+.bronnen{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.bron{font-size:10px;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:20px}
+.bron-lighthouse{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.bron-compliance{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.bron-personeel{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-border)}
+.bron-weer{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+
+/* Bezettingsbalk */
+.bez-chart{display:flex;gap:3px;align-items:flex-end;height:56px;margin-bottom:8px}
+.bez-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bez-balk{width:100%;border-radius:3px 3px 0 0}
+.bez-balk.laag{background:var(--green)}
+.bez-balk.midden{background:var(--amber)}
+.bez-balk.hoog{background:var(--coral)}
+.bez-balk.hl{border:2px solid var(--purple);box-shadow:0 0 6px rgba(99,85,224,0.3)}
+.bez-maand{font-size:9px;font-family:'DM Mono',monospace;color:var(--text3)}
+
+/* Insight & aanbeveling */
+.insight{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:10px}
+.insight-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.insight-tekst{font-size:12px;color:var(--text2);line-height:1.6}
+.insight-tekst strong{color:var(--text)}
+.aanbeveling{background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:8px;padding:12px 16px;margin-bottom:10px}
+.aanbeveling-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.aanbeveling-tekst{font-size:12px;color:var(--text2);line-height:1.6}
+.aanbeveling-tekst strong{color:var(--text)}
+
+/* Weer strip */
+.weer-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.weer-dag{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 6px;text-align:center}
+.weer-dag.vandaag{border-color:var(--purple-border);background:var(--purple-bg)}
+.weer-icon{font-size:20px;margin-bottom:3px}
+.weer-naam{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-bottom:2px}
+.weer-temp{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text)}
+.weer-neerslag{font-size:10px;color:var(--text3);margin-top:2px}
+.weer-impact{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;margin-bottom:6px}
+.weer-impact.positief{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.weer-impact.negatief{background:var(--coral-bg);border:1px solid var(--coral-border);color:var(--coral)}
+.weer-impact.neutraal{background:var(--gray-bg);border:1px solid var(--gray-border);color:var(--gray)}
+
+/* Toby AI per signaal */
+.vera-row{display:flex;gap:8px;margin-top:10px}
+.toby-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);outline:none}
+.toby-input:focus{border-color:var(--purple)}
+.toby-input::placeholder{color:var(--text3)}
+.vera-btn{background:var(--purple);border:none;border-radius:7px;padding:8px 14px;font-size:11px;font-weight:500;color:white;cursor:pointer;white-space:nowrap}
+.vera-antwoord{margin-top:10px;background:var(--bg2);border-left:3px solid var(--purple);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.7;display:none}
+.vera-antwoord.show{display:block}
+
+/* Actie knoppen */
+.actie-rij{display:flex;gap:8px;margin-top:10px}
+.actie-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:7px 14px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+.actie-btn:hover{border-color:var(--purple-border);color:var(--purple)}
+.actie-btn.prim{background:var(--purple);border-color:var(--purple);color:white}
+.actie-btn.prim:hover{background:#5448c8}
+.actie-btn:disabled{opacity:0.6;cursor:default}
+
+/* API Modal */
+#api-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:500;align-items:center;justify-content:center}
+#api-modal.open{display:flex}
+.api-box{background:var(--bg3);border:1px solid var(--border2);border-radius:14px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+.api-box h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+.api-box p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+#api-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;margin-bottom:12px;box-sizing:border-box}
+.api-btns{display:flex;gap:8px}
+#btn-save-key{flex:1;background:var(--purple);border:none;border-radius:7px;padding:10px;font-size:12px;font-weight:500;color:white;cursor:pointer}
+#btn-skip-key{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 16px;font-size:12px;color:var(--text2);cursor:pointer}
+
+.loading{text-align:center;padding:40px 0;color:var(--text3);font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;color:var(--bg);z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;font-family:'DM Mono',monospace;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="toby-hub.html" class="back-link">&#8592; Centrale Hub</a>
+  <div class="logo-mark">V</div>
+  <div class="logo-name">Toby</div>
+  <div class="topbar-div"></div>
+  <div class="topbar-page">Cross-discipline signalen</div>
+  <div class="topbar-right">
+    <div class="hotel-badge" id="hotel-naam">Hotel De Klok</div>
+    <button class="api-btn" id="api-status-btn">API: —</button>
+  </div>
+</div>
+
+<div id="api-modal">
+  <div class="api-box">
+    <h3>&#128274; Anthropic API sleutel</h3>
+    <p>Vul je API sleutel in voor Toby AI. Wordt alleen in je browser opgeslagen.</p>
+    <input id="api-input" type="password" placeholder="sk-ant-api03-...">
+    <div class="api-btns">
+      <button id="btn-save-key">Opslaan</button>
+      <button id="btn-skip-key">Overslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">Cross-discipline signalen</div>
+  <div class="page-sub">Vera kijkt niet per afdeling maar naar het hotel als systeem. Deze signalen ontstaan door data te combineren die normaal nooit met elkaar praten.</div>
+  <div id="container"><div class="loading"><div class="spinner"></div>Signalen laden...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient('https://nznsimwgjwkdvudcdmup.supabase.co', 'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ');
+const HOTEL_ID = '6a0ba674-4bfc-44d8-bfcf-0b598d05e097';
+const MAANDEN = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+let ANTHROPIC_KEY = localStorage.getItem('toby_anthropic_key') || '';
+let bezData = [], compData = [], medewData = [], avgPerMaand = {};
+
+// API modal
+document.getElementById('api-status-btn').addEventListener('click', function() {
+  document.getElementById('api-modal').classList.add('open');
+  document.getElementById('api-input').value = ANTHROPIC_KEY;
+});
+document.getElementById('btn-save-key').addEventListener('click', function() {
+  var k = document.getElementById('api-input').value.trim();
+  if (!k) return;
+  ANTHROPIC_KEY = k;
+  localStorage.setItem('toby_anthropic_key', k);
+  document.getElementById('api-modal').classList.remove('open');
+  updateApiStatus();
+  showToast('Opgeslagen');
+});
+document.getElementById('btn-skip-key').addEventListener('click', function() {
+  document.getElementById('api-modal').classList.remove('open');
+});
+function updateApiStatus() {
+  var b = document.getElementById('api-status-btn');
+  b.textContent = ANTHROPIC_KEY ? 'API: actief' : 'API: niet ingesteld';
+  b.style.color = ANTHROPIC_KEY ? 'var(--green)' : '';
+}
+
+async function init() {
+  updateApiStatus();
+  var hotel = await sb.from('hotels').select('naam').eq('id', HOTEL_ID).single();
+  if (hotel.data) document.getElementById('hotel-naam').textContent = hotel.data.naam;
+
+  var results = await Promise.all([
+    sb.from('bezetting_historisch').select('maand,jaar,bezettingsgraad').eq('hotel_id', HOTEL_ID).order('jaar').order('maand'),
+    sb.from('compliance_items').select('id,naam,categorie,status,vervaldatum').eq('hotel_id', HOTEL_ID),
+    sb.from('medewerkers').select('naam,bhv_geldig_tot').eq('hotel_id', HOTEL_ID).eq('actief', true)
+  ]);
+
+  bezData = results[0].data || [];
+  compData = results[1].data || [];
+  medewData = results[2].data || [];
+
+  // Bereken gemiddelde bezetting per maand
+  var perMaand = {};
+  bezData.forEach(function(b) {
+    if (!perMaand[b.maand]) perMaand[b.maand] = [];
+    perMaand[b.maand].push(b.bezettingsgraad);
+  });
+  for (var m in perMaand) {
+    var vals = perMaand[m];
+    avgPerMaand[m] = vals.reduce(function(a, b) { return a + b; }, 0) / vals.length;
+  }
+
+  bouwSignalen();
+
+  // Weersignaal op achtergrond
+  setTimeout(laadWeer, 200);
+}
+
+function bouwSignalen() {
+  var container = document.getElementById('container');
+  var html = '';
+
+  // Rustige maanden
+  var rustig = Object.keys(avgPerMaand).filter(function(m) { return avgPerMaand[m] < 55; })
+    .sort(function(a, b) { return avgPerMaand[a] - avgPerMaand[b]; });
+
+  var brandItems = compData.filter(function(i) { return i.categorie === 'brand' && i.status !== 'groen'; });
+  var haccpItems = compData.filter(function(i) { return i.categorie === 'haccp' && i.status !== 'groen'; });
+  var rieItems = compData.filter(function(i) { return i.categorie === 'rie' && i.status !== 'groen'; });
+  var instItems = compData.filter(function(i) { return i.categorie === 'installatie' && i.status !== 'groen'; });
+
+  var bhvGeldig = medewData.filter(function(m) {
+    return m.bhv_geldig_tot && new Date(m.bhv_geldig_tot) > new Date();
+  });
+
+  var hoog = Object.keys(avgPerMaand).filter(function(m) { return avgPerMaand[m] > 80; });
+
+  // Signaal 1: Brand x Bezetting
+  if (brandItems.length > 0 && rustig.length > 0) {
+    var rm = parseInt(rustig[0]);
+    html += maakSignaal({
+      klasse: 'aandacht', icon: '&#128293;',
+      type: 'Brand x Bezetting',
+      titel: 'Plan brandveiligheidsoefening in ' + MAANDEN[rm - 1],
+      sub: brandItems.length + ' brandveiligheidsitems open. Gemiddeld ' + Math.round(avgPerMaand[rm]) + '% bezetting in ' + MAANDEN[rm - 1] + ' — laagste verstoring.',
+      bronnen: ['lighthouse', 'compliance'],
+      chart: true, highlightMaand: rm,
+      insight: 'Op basis van 2 jaar historische data is <strong>' + MAANDEN[rm - 1] + ' de rustigste maand</strong> met gemiddeld ' + Math.round(avgPerMaand[rm]) + '% bezetting. Een brandveiligheidsoefening vereist dat alle medewerkers aanwezig zijn — dit verstoort de operatie minimaal als het hotel rustig is.',
+      aanbeveling: 'Plan de <strong>ontruimingsoefening</strong> en <strong>brandveiligheidskeuring</strong> in <strong>' + MAANDEN[rm - 1] + '</strong>. Boek nu — externe partijen vereisen minimaal een maand van tevoren.',
+      vraag: 'Wanneer moet ik de brandveiligheidsoefening plannen?',
+      actieId: 'brand', actieLabel: 'Actiepunt aanmaken'
+    });
+  }
+
+  // Signaal 2: HACCP x Bezetting
+  if (haccpItems.length > 0 && rustig.length > 0) {
+    var rm2 = parseInt(rustig[0]);
+    html += maakSignaal({
+      klasse: 'aandacht', icon: '&#127869;&#65039;',
+      type: 'HACCP x Bezetting',
+      titel: 'HACCP-training plannen in rustige periode',
+      sub: haccpItems.length + ' HACCP-items open. Laagste verstoring in ' + MAANDEN[rm2 - 1] + ' (' + Math.round(avgPerMaand[rm2]) + '% bezetting).',
+      bronnen: ['lighthouse', 'compliance'],
+      chart: true, highlightMaand: rm2,
+      insight: 'HACCP-training vereist dat keukenmedewerkers tijdelijk van de vloer zijn. In piekperiodes is dit niet realistisch. In <strong>' + MAANDEN[rm2 - 1] + '</strong> is de F&B-belasting minimaal.',
+      aanbeveling: 'Plan de <strong>HACCP-herhalingsles</strong> in <strong>' + MAANDEN[rm2 - 1] + '</strong>. Combineer met een leveranciersaudit — dan hoef je maar eenmaal te plannen.',
+      vraag: 'Wat moet ik regelen voor HACCP-compliance?',
+      actieId: 'haccp', actieLabel: 'Actiepunt aanmaken'
+    });
+  }
+
+  // Signaal 3: BHV x Piekbezetting
+  if (bhvGeldig.length < 2 && hoog.length > 0) {
+    var pm = hoog.sort(function(a, b) { return avgPerMaand[b] - avgPerMaand[a]; })[0];
+    html += maakSignaal({
+      klasse: 'urgent', icon: '&#128680;',
+      type: 'BHV x Piekbezetting',
+      titel: 'BHV-onderbezetting richting piekperiode ' + MAANDEN[parseInt(pm) - 1],
+      sub: 'Slechts ' + bhvGeldig.length + ' BHV-gecertificeerde medewerker voor een piek van ' + Math.round(avgPerMaand[pm]) + '% bezetting.',
+      bronnen: ['personeel', 'lighthouse'],
+      chart: true, highlightMaand: parseInt(pm),
+      insight: 'De Arbowet vereist voldoende BHV-ers in verhouding tot aanwezige personen. Bij ' + Math.round(avgPerMaand[pm]) + '% bezetting (~41 gasten + personeel) zijn <strong>minimaal 2 BHV-ers per dienst</strong> noodzakelijk.',
+      aanbeveling: 'Plan voor <strong>minimaal 1 extra medewerker een BHV-opleiding</strong> voor de zomerpiek. BHV-opleidingen duren 1 dag en moeten minimaal 6 weken van tevoren geboekt worden.',
+      vraag: 'Hoeveel BHV-ers heb ik nodig voor de zomerpiek?',
+      actieId: 'bhv', actieLabel: 'BHV opleiding plannen'
+    });
+  }
+
+  // Signaal 4: Installaties x Bezetting
+  if (instItems.length > 0 && rustig.length > 0) {
+    var rm4 = parseInt(rustig[0]);
+    html += maakSignaal({
+      klasse: 'info', icon: '&#128295;',
+      type: 'Installaties x Bezetting',
+      titel: instItems.length + ' installatiekeuringen plannen in ' + MAANDEN[rm4 - 1],
+      sub: 'Liftkeuring en CV-ketelonderhoud vereisen toegang tot het gebouw. Plan in de rustigste periode om gastoverlast te minimaliseren.',
+      bronnen: ['lighthouse', 'compliance'],
+      chart: true, highlightMaand: rm4,
+      insight: 'Een liftkeuring duurt gemiddeld een halve dag — de lift is dan buiten gebruik. Bij ' + Math.round(avgPerMaand[rm4]) + '% bezetting is de kans klein dat gasten hinder ondervinden.',
+      aanbeveling: 'Combineer <strong>liftkeuring</strong> en <strong>CV-ketelonderhoud</strong> in <strong>' + MAANDEN[rm4 - 1] + '</strong> — één dag planning voor beide.',
+      vraag: 'Wanneer plan ik de liftkeuring en CV-onderhoud?',
+      actieId: 'inst', actieLabel: 'Actiepunten aanmaken'
+    });
+  }
+
+  container.innerHTML = html || '<div class="loading">Geen signalen gevonden.</div>';
+  bindActies();
+  bindVera();
+}
+
+function maakSignaal(s) {
+  var chartHtml = '';
+  if (s.chart && Object.keys(avgPerMaand).length > 0) {
+    chartHtml = '<div class="bez-chart">';
+    for (var m = 1; m <= 12; m++) {
+      var val = avgPerMaand[m] || 0;
+      var h = Math.round(val * 0.50);
+      var hl = m === s.highlightMaand;
+      var kl = val < 55 ? 'laag' : val < 75 ? 'midden' : 'hoog';
+      chartHtml += '<div class="bez-col">' +
+        '<div class="bez-balk ' + kl + (hl ? ' hl' : '') + '" style="height:' + h + 'px"></div>' +
+        '<div class="bez-maand" style="' + (hl ? 'color:var(--purple);font-weight:600' : '') + '">' + MAANDEN[m - 1] + '</div>' +
+        '</div>';
+    }
+    chartHtml += '</div>';
+  }
+
+  var bronHtml = s.bronnen.map(function(b) {
+    var labels = {lighthouse: '&#128201; Lighthouse', compliance: '&#9989; Compliance', personeel: '&#128100; Personeel', weer: '&#127782;&#65039; Open-Meteo'};
+    return '<span class="bron bron-' + b + '">' + (labels[b] || b) + '</span>';
+  }).join('');
+
+  return '<div class="signaal ' + s.klasse + '" id="sig-' + s.actieId + '">' +
+    '<div class="signaal-header">' +
+      '<div class="signaal-ind ind-' + s.klasse + '">' + s.icon + '</div>' +
+      '<div style="flex:1">' +
+        '<div class="signaal-type ' + s.klasse + '">' + s.type + '</div>' +
+        '<div class="signaal-titel">' + s.titel + '</div>' +
+        '<div class="signaal-sub">' + s.sub + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="signaal-body">' +
+      '<div class="bronnen">' + bronHtml + '</div>' +
+      chartHtml +
+      '<div class="insight"><div class="insight-label">&#128202; Toby ziet</div><div class="insight-tekst">' + s.insight + '</div></div>' +
+      '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Vera adviseert</div><div class="aanbeveling-tekst">' + s.aanbeveling + '</div></div>' +
+      '<div class="vera-row">' +
+        '<input class="toby-input" placeholder="Stel Toby een vervolgvraag..." data-default="' + s.vraag + '" data-sig="' + s.actieId + '" value="' + s.vraag + '">' +
+        '<button class="vera-btn" data-sig="' + s.actieId + '">Vraag Toby</button>' +
+      '</div>' +
+      '<div class="vera-antwoord" id="vera-' + s.actieId + '"></div>' +
+      '<div class="actie-rij">' +
+        '<button class="actie-btn prim" data-actie="' + s.actieId + '">' + s.actieLabel + '</button>' +
+        '<a href="toby-compliance.html" class="actie-btn">Bekijk compliance</a>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// Weersignaal via Open-Meteo
+async function laadWeer() {
+  try {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=52.37&longitude=4.90&daily=weathercode,temperature_2m_max,precipitation_sum&timezone=Europe%2FAmsterdam&forecast_days=5';
+    var resp = await fetch(url);
+    var data = await resp.json();
+    if (!data.daily) return;
+
+    var weerIcons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',51:'🌦️',61:'🌧️',80:'🌦️',95:'⛈️'};
+    var daily = data.daily;
+    var dagen = ['zo','ma','di','wo','do','vr','za'];
+    var impacts = [];
+
+    var stripHtml = '<div class="weer-strip">';
+    for (var i = 0; i < 5; i++) {
+      var code = daily.weathercode[i];
+      var tmax = Math.round(daily.temperature_2m_max[i]);
+      var neerslag = daily.precipitation_sum[i] || 0;
+      var icon = weerIcons[code] || weerIcons[Math.floor(code / 10) * 10] || '🌡️';
+      var datum = new Date(daily.time[i]);
+      var dagNaam = i === 0 ? 'vandaag' : dagen[datum.getDay()];
+      stripHtml += '<div class="weer-dag' + (i === 0 ? ' vandaag' : '') + '">' +
+        '<div class="weer-naam">' + dagNaam + '</div>' +
+        '<div class="weer-icon">' + icon + '</div>' +
+        '<div class="weer-temp">' + tmax + '&#176;</div>' +
+        '<div class="weer-neerslag">' + (neerslag > 0.5 ? neerslag.toFixed(1) + 'mm' : '') + '</div>' +
+        '</div>';
+      if (tmax >= 22 && code <= 3) impacts.push({type: 'positief', dag: dagNaam, tekst: 'Mooi weer (' + tmax + '&#176;) — verwacht hogere last-minute boekingen'});
+      else if (code >= 61 || neerslag > 5) impacts.push({type: 'negatief', dag: dagNaam, tekst: 'Regen (' + neerslag.toFixed(1) + 'mm) — gasten blijven langer binnen, hogere F&B vraag'});
+    }
+    stripHtml += '</div>';
+
+    var impactHtml = impacts.slice(0, 2).map(function(imp) {
+      return '<div class="weer-impact ' + imp.type + '">' +
+        '<span>' + (imp.type === 'positief' ? '☀️' : '🌧️') + '</span>' +
+        '<span><strong>' + imp.dag + ':</strong> ' + imp.tekst + '</span>' +
+        '</div>';
+    }).join('') || '<div class="weer-impact neutraal"><span>→</span><span>Geen grote weersinvloeden verwacht.</span></div>';
+
+    var eersteImpact = impacts[0];
+    var klasse = eersteImpact ? (eersteImpact.type === 'positief' ? 'goed' : 'aandacht') : 'info';
+    var icon = eersteImpact ? (eersteImpact.type === 'positief' ? '☀️' : '🌧️') : '🌡️';
+    var titel = eersteImpact
+      ? (eersteImpact.type === 'positief' ? 'Mooi weer — kans op extra omzet en last-minute boekingen' : 'Regenachtig weer — anticipeer op gedragsverandering gasten')
+      : 'Stabiel weer deze week';
+
+    var weerKaart = '<div class="signaal ' + klasse + '" id="sig-weer">' +
+      '<div class="signaal-header">' +
+        '<div class="signaal-ind ind-' + klasse + '">' + icon + '</div>' +
+        '<div style="flex:1">' +
+          '<div class="signaal-type ' + klasse + '">Weer x Bezetting x Omzet</div>' +
+          '<div class="signaal-titel">' + titel + '</div>' +
+          '<div class="signaal-sub">Live 5-daagse weersvoorspelling Amsterdam via Open-Meteo</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="signaal-body">' +
+        '<div class="bronnen"><span class="bron bron-weer">&#127782;&#65039; Open-Meteo</span><span class="bron bron-lighthouse">&#128201; Lighthouse</span></div>' +
+        stripHtml + impactHtml +
+        '<div class="aanbeveling"><div class="aanbeveling-label">&#10024; Vera adviseert</div><div class="aanbeveling-tekst">' +
+          (eersteImpact && eersteImpact.type === 'positief'
+            ? 'Bij aanhoudend mooi weer: activeer last-minute deals via OTA, zorg voor extra terrasbestelling en overweeg een dagrecreanten-pakket.'
+            : 'Bij regenachtig weer verblijven gasten langer in het hotel. Overweeg een in-room dining aanbieding en check of F&B extra capaciteit aankan.') +
+        '</div></div>' +
+        '<div class="vera-row">' +
+          '<input class="toby-input" placeholder="Stel Toby een vraag over het weer..." data-sig="weer" value="Wat kan ik doen om de omzet te maximaliseren gezien het verwachte weer?">' +
+          '<button class="vera-btn" data-sig="weer">Vraag Toby</button>' +
+        '</div>' +
+        '<div class="vera-antwoord" id="vera-weer"></div>' +
+        '<div class="actie-rij"><button class="actie-btn prim" data-actie="weer">Actie aanmaken</button></div>' +
+      '</div>' +
+    '</div>';
+
+    var container = document.getElementById('container');
+    container.insertAdjacentHTML('afterbegin', weerKaart);
+    bindActies();
+    bindVera();
+  } catch(e) {
+    console.log('Weer fout:', e);
+  }
+}
+
+// Actiepunten
+var actieTitels = {
+  brand: 'Brandveiligheidsoefening plannen',
+  haccp: 'HACCP-training inplannen',
+  bhv: 'Extra BHV-opleiding plannen voor piekperiode',
+  inst: 'Liftkeuring + CV-onderhoud combineren in laagseizoen',
+  weer: 'Revenue actie op basis van weersvoorspelling'
+};
+
+function bindActies() {
+  document.querySelectorAll('[data-actie]').forEach(function(btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', async function() {
+      var id = this.dataset.actie;
+      var titel = actieTitels[id] || 'Actie';
+      var r = await sb.from('acties').insert({hotel_id: HOTEL_ID, titel: titel, aangemaakt_door: 'vera', status: 'open'});
+      if (r.error) { showToast('Fout: ' + r.error.message); return; }
+      this.textContent = 'Aangemaakt';
+      this.disabled = true;
+      showToast('Actiepunt aangemaakt');
+    });
+  });
+}
+
+function bindVera() {
+  document.querySelectorAll('.vera-btn').forEach(function(btn) {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', function() { vraagVera(this.dataset.sig); });
+  });
+}
+
+async function vraagVera(sigId) {
+  if (!ANTHROPIC_KEY) { document.getElementById('api-modal').classList.add('open'); return; }
+  var input = document.querySelector('.toby-input[data-sig="' + sigId + '"]');
+  var ant = document.getElementById('vera-' + sigId);
+  var btn = document.querySelector('.vera-btn[data-sig="' + sigId + '"]');
+  var vraag = input.value.trim();
+  if (!vraag) return;
+  btn.textContent = '...'; btn.disabled = true;
+  ant.classList.remove('show');
+
+  var ctx = 'Hotel: Hotel De Klok, Amsterdam, 60 kamers.\n';
+  ctx += 'Gemiddelde bezetting: ' + Object.keys(avgPerMaand).map(function(m) { return MAANDEN[m-1] + ':' + Math.round(avgPerMaand[m]) + '%'; }).join(', ') + '\n';
+  ctx += 'Compliance: ' + compData.filter(function(i) { return i.status !== 'groen'; }).length + ' items open\n';
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: 'Je bent Toby, assistent voor hotelmanager Hotel De Klok Amsterdam. Directe praktische antwoorden, geen disclaimers, Nederlands, max 4 zinnen.',
+        messages: [{role: 'user', content: 'Data:\n' + ctx + '\nVraag: ' + vraag}]
+      })
+    });
+    var data = await resp.json();
+    var tekst = data.content ? data.content.filter(function(b) { return b.type === 'text'; }).map(function(b) { return b.text; }).join('') : 'Geen antwoord.';
+    ant.innerHTML = tekst.replace(/\n/g, '<br>');
+    ant.classList.add('show');
+  } catch(e) {
+    ant.textContent = 'Er ging iets mis.'; ant.classList.add('show');
+  }
+  btn.textContent = 'Vraag Toby'; btn.disabled = false;
+  input.value = '';
+}
+
+var toastT;
+function showToast(msg) {
+  var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+init();
+</script>
+<script src="toby-widget.js"></script>
+</body>
+</html>
