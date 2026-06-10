@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toby — Inloggen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%}
+body{background:#f4f1ec;font-family:'DM Sans',-apple-system,sans-serif;color:#1a1814;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+.container{width:100%;max-width:380px;padding:24px}
+.logo{text-align:center;margin-bottom:40px}
+.logo svg{margin-bottom:16px}
+.logo-name{font-size:22px;font-weight:300;letter-spacing:-0.02em;color:#1a1814}
+.logo-sub{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.15em;color:#b8b4ae;text-transform:uppercase;margin-top:4px}
+.card{background:#fff;border-radius:16px;border:0.5px solid rgba(0,0,0,0.08);padding:28px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-title{font-size:15px;font-weight:500;margin-bottom:6px}
+.card-sub{font-size:13px;color:#8a8680;margin-bottom:24px;line-height:1.6}
+label{font-size:12px;font-weight:500;color:#5a5650;display:block;margin-bottom:6px}
+input[type=email]{width:100%;background:#f4f1ec;border:0.5px solid rgba(0,0,0,0.14);border-radius:8px;padding:11px 14px;font-size:14px;font-family:inherit;color:#1a1814;outline:none;margin-bottom:16px;transition:border-color .15s}
+input[type=email]:focus{border-color:rgba(99,85,224,0.4);background:#fff}
+.btn{width:100%;background:#6355e0;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:hover{background:#5448c8}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.succes{display:none;text-align:center;padding:20px 0}
+.succes-icon{font-size:36px;margin-bottom:12px}
+.succes-titel{font-size:15px;font-weight:500;margin-bottom:6px}
+.succes-sub{font-size:13px;color:#8a8680;line-height:1.6}
+.fout{display:none;background:rgba(216,74,48,0.08);border:0.5px solid rgba(216,74,48,0.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#d84a30;margin-bottom:12px}
+.wm{margin-top:32px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;color:#d0cdc8;text-transform:uppercase;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <svg viewBox="0 0 60 60" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+      <path d="M29 44 C24 52,18 57,13 58" stroke="#b4a8e0" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <path d="M31 44 C31 53,32 58,33 62" stroke="#c0b8e8" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+      <ellipse cx="30" cy="33" rx="6" ry="10" fill="#9890d8" transform="rotate(-15,30,33)"/>
+      <path d="M25 30 C16 23,8 21,3 25 C10 21,20 25,25 29 Z" fill="#7068c4" opacity="0.75"/>
+      <path d="M35 29 C44 22,52 20,57 24 C50 21,40 26,35 28 Z" fill="#8880cc" opacity="0.85"/>
+      <ellipse cx="30" cy="23" rx="4" ry="5.5" fill="#8880cc" transform="rotate(-10,30,23)"/>
+      <ellipse cx="31" cy="25" rx="2.5" ry="3" fill="#c84870" opacity="0.6" transform="rotate(-10,31,25)"/>
+      <circle cx="30" cy="18" r="5.5" fill="#7870c0"/>
+      <circle cx="32" cy="16.5" r="1.5" fill="#2c2840"/>
+      <circle cx="32.5" cy="16" r="0.5" fill="rgba(255,255,255,0.65)"/>
+      <path d="M34 19 Q42 17 50 16" stroke="#c8bc8c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-name">Toby</div>
+    <div class="logo-sub">Hotel Intelligence</div>
+  </div>
+
+  <div class="card">
+    <div id="login-form">
+      <div class="card-title">Inloggen</div>
+      <div class="card-sub">Je ontvangt een magische link op je e-mailadres. Geen wachtwoord nodig.</div>
+      <div class="fout" id="fout-box"></div>
+      <label for="email">E-mailadres</label>
+      <input type="email" id="email" placeholder="jouw@email.nl" autofocus>
+      <button class="btn" id="login-btn" onclick="stuurLink()">Stuur magic link</button>
+    </div>
+    <div class="succes" id="succes-box">
+      <div class="succes-icon">✉️</div>
+      <div class="succes-titel">Check je inbox</div>
+      <div class="succes-sub">We hebben een link gestuurd naar <strong id="succes-email"></strong>.<br>Klik op de link om in te loggen.</div>
+    </div>
+  </div>
+  <div class="wm">Toby</div>
+</div>
+
+<script>
+const sb = supabase.createClient(
+  'https://nznsimwgjwkdvudcdmup.supabase.co',
+  'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ'
+);
+
+// Als al ingelogd, direct naar hub
+sb.auth.getSession().then(function(r) {
+  if (r.data.session) location.href = 'toby-hub.html';
+});
+
+// Magic link afhandelen na redirect
+sb.auth.onAuthStateChange(function(event, session) {
+  if (event === 'SIGNED_IN' && session) {
+    location.href = 'toby-hub.html';
+  }
+});
+
+async function stuurLink() {
+  var email = document.getElementById('email').value.trim();
+  var btn = document.getElementById('login-btn');
+  var fout = document.getElementById('fout-box');
+
+  if (!email || !email.includes('@')) {
+    fout.textContent = 'Vul een geldig e-mailadres in.';
+    fout.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Versturen...';
+  fout.style.display = 'none';
+
+  var redirectUrl = window.location.origin + window.location.pathname.replace('toby-login.html', 'toby-hub.html');
+
+  var result = await sb.auth.signInWithOtp({
+    email: email,
+    options: {
+      emailRedirectTo: redirectUrl
+    }
+  });
+
+  if (result.error) {
+    fout.textContent = result.error.message;
+    fout.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Stuur magic link';
+  } else {
+    document.getElementById('succes-email').textContent = email;
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('succes-box').style.display = 'block';
+  }
+}
+
+document.getElementById('email').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') stuurLink();
+});
+</script>
+</body>
+</html>
