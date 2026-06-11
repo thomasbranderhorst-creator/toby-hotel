@@ -159,7 +159,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="gratis-badge">&#9889; Gratis — geen API tokens</div>
   </div>
 
-    <div class="cat-tab" data-feed="https://www.hospitalitynet.org/rss/news.xml" data-type="rss">&#127757; Hospitalitynet</div>
+  <!-- Categorie tabs -->
+  <div class="cat-tabs" id="cat-tabs">
+    <div class="cat-tab active" id="tab-weer" data-feed="weer nederland hotel toerisme zomer">&#127782;&#65039; Weer &amp; Toerisme</div>
     <div class="cat-tab" id="tab-jouw-bron" onclick="openJouwBron()" style="border:1px dashed rgba(99,85,224,0.4);color:var(--purple)">&#43; Jouw nieuwsbron</div>
     <div class="cat-tab" data-feed="horeca wetgeving nederland hotel">Wetgeving</div>
     <div class="cat-tab" data-feed="horeca CAO 2025 2026 personeel">CAO &amp; Personeel</div>
@@ -198,11 +200,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <!-- Bronnen -->
   <div class="section-label">Primaire bronnen</div>
   <div class="bronnen-grid" id="bronnen-grid">
-    <a href="https://www.hospitalitynet.org" target="_blank" class="bron-card">
-      <div class="bron-naam">🌍 Hospitalitynet</div>
-      <div class="bron-sub">Internationaal hospitality nieuws</div>
-      <div class="bron-url">hospitalitynet.org</div>
-    </a>
     <a href="https://khn.nl/nieuws" target="_blank" class="bron-card">
       <div class="bron-naam">&#128081; KHN</div>
       <div class="bron-sub">Koninklijke Horeca Nederland — wet &amp; regelgeving, CAO</div>
