@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <span style="font-size:11px;color:var(--text3)" id="weer-wind"></span>
     </div>
     <!-- Nieuws 1 regel -->
-    <div class="hub-card" style="margin-bottom:0;cursor:pointer" onclick="var u=window._nieuwsUrl,t=window._nieuwsTitel;window.location.href='toby-nieuws.html'+(u?'?artikel='+encodeURIComponent(u)+'&titel='+encodeURIComponent(t||''):'')">
+    <div class="hub-card" id="nieuws-kaart" style="margin-bottom:0;cursor:pointer" onclick="var u=document.getElementById('nieuws-kaart').dataset.url,t=document.getElementById('nieuws-kaart').dataset.titel;window.location.href='toby-nieuws.html'+(u?'?artikel='+encodeURIComponent(u)+'&titel='+encodeURIComponent(t||''):'')">
       <div style="padding:10px 16px;display:flex;align-items:center;gap:8px">
         <span style="font-size:12px;color:var(--text3);flex-shrink:0">📰</span>
         <div id="nieuws-inhoud" style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">Laden...</div>
@@ -887,8 +887,8 @@ async function laadNieuws() {
     if (!Array.isArray(items) || items.length === 0) throw new Error('Geen items');
     var first = items[0];
     if (first) {
-      window._nieuwsUrl = first.link;
-      window._nieuwsTitel = first.titel || '';
+      var kaart = document.getElementById('nieuws-kaart');
+      if (kaart) { kaart.dataset.url = first.link; kaart.dataset.titel = first.titel || ''; }
       document.getElementById('nieuws-inhoud').textContent = (first.titel || '').substring(0, 80) + (first.titel && first.titel.length > 80 ? '...' : '');
     }
   } catch(e) {
