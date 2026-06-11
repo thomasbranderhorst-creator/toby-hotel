@@ -890,10 +890,7 @@ async function laadNieuws() {
       var el = document.getElementById('nieuws-inhoud');
       if (el) {
         el.textContent = (first.titel || '').substring(0, 80) + (first.titel && first.titel.length > 80 ? '...' : '');
-        // Zet onclick op het klikbare element (2 niveaus omhoog)
-        var klik = el.closest ? el.closest('[onclick]') : el.parentElement.parentElement;
-        if (!klik || !klik.getAttribute('onclick')) klik = el.parentElement.parentElement;
-        klik.style.cursor = 'pointer';
+        var klik = el.parentElement.parentElement;
         klik.onclick = function() {
           window.location.href = 'toby-nieuws.html?artikel=' + encodeURIComponent(first.link) + '&titel=' + encodeURIComponent(first.titel || '');
         };
