@@ -870,7 +870,7 @@ init();
 // ── WEER ──
 async function laadWeer() {
   try {
-    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/weer-nieuws?type=weer');
+    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/weer-nieuws?type=weer', {headers:{'apikey':'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ'}});
     var data = await res.json();
     var w = data.weer;
     if (w.error) throw new Error(w.error);
@@ -887,7 +887,7 @@ async function laadWeer() {
 // ── NIEUWS ──
 async function laadNieuws() {
   try {
-    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/weer-nieuws?type=nieuws');
+    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/weer-nieuws?type=nieuws', {headers:{'apikey':'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ'}});
     var data = await res.json();
     var items = data.nieuws;
     if (!Array.isArray(items) || items.length === 0) throw new Error('Geen items');
