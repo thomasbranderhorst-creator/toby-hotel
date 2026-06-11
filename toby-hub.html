@@ -888,6 +888,9 @@ async function laadNieuws() {
     var first = items[0];
     if (first) {
       document.getElementById('nieuws-inhoud').textContent = (first.titel || '').substring(0, 80) + (first.titel && first.titel.length > 80 ? '...' : '');
+      document.getElementById('nieuws-inhoud').parentElement.parentElement.onclick = function() {
+        window.location.href = 'toby-nieuws.html?artikel=' + encodeURIComponent(first.link) + '&titel=' + encodeURIComponent(first.titel || '');
+      };
     }
   } catch(e) {
     document.getElementById('nieuws-inhoud').textContent = 'Klik voor het laatste hotelsector nieuws';
