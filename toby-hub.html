@@ -282,7 +282,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <div style="font-size:12px;color:var(--text2);line-height:1.6">Koppel je documenten, upload je HK checklist en sync je systemen. Toby vult het dashboard automatisch.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
-      <button onclick="window.location.href='toby-docs.html?onboarding=1'" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Start onboarding →</button>
+      <button onclick="startOnboarding()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Start onboarding →</button>
       <button onclick="this.closest('#onboarding-banner').style.display='none'" style="background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;font-family:inherit">Later</button>
     </div>
   </div>
@@ -980,7 +980,10 @@ if (obVoltooid) {
 }
 
 function startOnboarding() {
-  window.location.href = 'toby-docs.html?onboarding=1';
+  document.getElementById('onboarding-banner').style.display = 'none';
+  document.getElementById('onboarding-flow').style.display = 'block';
+  obStap(1);
+  document.getElementById('onboarding-flow').scrollIntoView({behavior:'smooth'});
 }
 
 function sluitOnboarding() {
@@ -1065,7 +1068,10 @@ if (obVoltooid) {
 }
 
 function startOnboarding() {
-  window.location.href = 'toby-docs.html?onboarding=1';
+  document.getElementById('onboarding-banner').style.display = 'none';
+  document.getElementById('onboarding-flow').style.display = 'block';
+  obStap(1);
+  document.getElementById('onboarding-flow').scrollIntoView({behavior:'smooth'});
 }
 
 function sluitOnboarding() {
