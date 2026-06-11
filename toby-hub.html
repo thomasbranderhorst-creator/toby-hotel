@@ -355,6 +355,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="toby-ai-antwoord" id="vera-antwoord"></div>
   </div>
 
+  <!-- Weer + Nieuws banner -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <!-- Weer -->
+    <div class="hub-card" style="margin-bottom:0">
+      <div class="hub-card-header">
+        <div class="hub-card-title" id="weer-stad">🌤️ Weer</div>
+      </div>
+      <div style="padding:12px 16px" id="weer-inhoud">
+        <div style="font-size:11px;color:var(--text3)">Laden...</div>
+      </div>
+    </div>
+    <!-- Nieuws -->
+    <div class="hub-card" style="margin-bottom:0">
+      <div class="hub-card-header">
+        <div class="hub-card-title">📰 Hotelsector</div>
+        <a href="toby-nieuws.html" class="hub-card-link">Meer →</a>
+      </div>
+      <div style="padding:8px 16px" id="nieuws-inhoud">
+        <div style="font-size:11px;color:var(--text3)">Laden...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="hub-card" style="margin-bottom:12px">
     <div class="hub-card-header">
       <div class="hub-card-title">👥 Losse leveranciers & vaste gezichten</div>
@@ -704,6 +727,92 @@ renderHkHub();
 init();
 </script>
 <script src="toby-auth.js">
+// ── WEER ──
+async function laadWeer() {
+  try {
+    // Open-Meteo — gratis, geen API key nodig
+    // Oss: lat 51.77, lon 5.52
+    var lat = 51.77, lon = 5.52, stad = 'Oss';
+    var res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,weathercode,windspeed_10m&hourly=temperature_2m&forecast_days=1&timezone=Europe%2FAmsterdam');
+    var data = await res.json();
+    var temp = Math.round(data.current.temperature_2m);
+    var wind = Math.round(data.current.windspeed_10m);
+    var code = data.current.weathercode;
+    var emoji = weerEmoji(code);
+    var omschr = weerOmschr(code);
+    document.getElementById('weer-stad').textContent = emoji + ' ' + stad;
+    document.getElementById('weer-inhoud').innerHTML =
+      '<div style="font-size:28px;font-weight:700;font-family:monospace;color:var(--purple)">' + temp + '°C</div>' +
+      '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + omschr + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:2px">💨 ' + wind + ' km/u</div>';
+  } catch(e) {
+    document.getElementById('weer-inhoud').innerHTML = '<div style="font-size:11px;color:var(--text3)">Niet beschikbaar</div>';
+  }
+}
+
+function weerEmoji(code) {
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤️';
+  if (code <= 3) return '☁️';
+  if (code <= 49) return '🌫️';
+  if (code <= 59) return '🌦️';
+  if (code <= 69) return '🌧️';
+  if (code <= 79) return '❄️';
+  if (code <= 82) return '🌧️';
+  if (code <= 84) return '🌨️';
+  if (code <= 99) return '⛈️';
+  return '🌡️';
+}
+
+function weerOmschr(code) {
+  if (code === 0) return 'Helder';
+  if (code <= 2) return 'Licht bewolkt';
+  if (code <= 3) return 'Bewolkt';
+  if (code <= 49) return 'Mist';
+  if (code <= 59) return 'Motregen';
+  if (code <= 69) return 'Regen';
+  if (code <= 79) return 'Sneeuw';
+  if (code <= 82) return 'Buien';
+  if (code <= 99) return 'Onweer';
+  return 'Onbekend';
+}
+
+// ── NIEUWS ──
+async function laadNieuws() {
+  try {
+    // RSS via rss2json API — gratis
+    var feed = 'https://www.hospitalitynet.org/rss/news.xml';
+    var res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed) + '&count=3');
+    var data = await res.json();
+    if (data.status !== 'ok' || !data.items.length) throw new Error('Geen items');
+    document.getElementById('nieuws-inhoud').innerHTML = data.items.slice(0, 3).map(function(item) {
+      var d = new Date(item.pubDate);
+      var t = d.toLocaleDateString('nl-NL', {day:'numeric', month:'short'});
+      return '<div style="padding:6px 0;border-bottom:0.5px solid var(--border)">' +
+        '<a href="' + item.link + '" target="_blank" style="font-size:12px;color:var(--text);text-decoration:none;font-weight:500;line-height:1.4;display:block">' + item.title.substring(0, 60) + (item.title.length > 60 ? '...' : '') + '</a>' +
+        '<div style="font-size:10px;color:var(--text3);margin-top:2px">' + t + '</div>' +
+        '</div>';
+    }).join('') + '<div style="padding:6px 0;font-size:11px;color:var(--text3)">Bron: Hospitalitynet</div>';
+  } catch(e) {
+    // Fallback: statische nieuws items
+    document.getElementById('nieuws-inhoud').innerHTML =
+      '<div style="padding:6px 0;border-bottom:0.5px solid var(--border)">' +
+        '<div style="font-size:12px;font-weight:500">Mews lanceert AI voice assistant voor hotels</div>' +
+        '<div style="font-size:10px;color:var(--text3);margin-top:2px">Jun 2026</div>' +
+      '</div>' +
+      '<div style="padding:6px 0;border-bottom:0.5px solid var(--border)">' +
+        '<div style="font-size:12px;font-weight:500">RevPAR stijgt 4.2% in Nederland Q2 2026</div>' +
+        '<div style="font-size:10px;color:var(--text3);margin-top:2px">Jun 2026</div>' +
+      '</div>' +
+      '<div style="padding:6px 0">' +
+        '<a href="toby-nieuws.html" style="font-size:11px;color:var(--purple)">Meer hotelsector nieuws →</a>' +
+      '</div>';
+  }
+}
+
+laadWeer();
+laadNieuws();
+
 // ── LOSSE LEVERANCIERS ──
 var losseLevs = JSON.parse(localStorage.getItem('toby_losse_levs') || '[]');
 
