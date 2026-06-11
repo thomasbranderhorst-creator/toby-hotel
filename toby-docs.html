@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Toby — Documenten</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f1ec;--bg2:#eceae4;--card:#fff;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1a1814;--text2:#5a5650;--text3:#8a8680;
+  --purple:#6355e0;--pbg:rgba(99,85,224,0.08);--pbo:rgba(99,85,224,0.25);
+  --green:#1a8c5a;--gbg:rgba(26,140,90,0.08);--gbo:rgba(26,140,90,0.25);
+  --amber:#c47c0a;--abg:rgba(196,124,10,0.08);--abo:rgba(196,124,10,0.25);
+  --coral:#d84a30;--cbg:rgba(216,74,48,0.08);--cbo:rgba(216,74,48,0.25);
+  --sh:0 1px 4px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);
+}
+body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);min-height:100vh;padding-bottom:60px}
+.hdr{padding:14px 20px;display:flex;align-items:center;gap:10px;background:var(--card);border-bottom:0.5px solid var(--border2);position:sticky;top:0;z-index:100}
+.hdr a{font-size:13px;color:var(--purple);text-decoration:none}
+.hdr-title{font-size:15px;font-weight:600;flex:1}
+.main{padding:12px;max-width:600px;margin:0 auto}
+.card{background:var(--card);border-radius:12px;box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+.ch{padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:13px;font-weight:600}
+.cb{padding:14px 16px}
+
+/* Zoek & filter */
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-input{flex:1;background:var(--card);border:0.5px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;box-shadow:var(--sh)}
+.search-input:focus{border-color:var(--purple)}
+.upload-btn{background:var(--purple);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* Mappen */
+.mappen-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.map-btn{background:var(--card);border:0.5px solid var(--border2);border-radius:10px;padding:14px;cursor:pointer;text-align:left;box-shadow:var(--sh);transition:all .12s;position:relative}
+.map-btn:hover,.map-btn.active{border-color:var(--pbo);background:var(--pbg)}
+.map-icon{font-size:22px;margin-bottom:6px}
+.map-naam{font-size:12px;font-weight:600;line-height:1.3;margin-bottom:2px}
+.map-count{font-size:11px;color:var(--text3)}
+.map-alert{position:absolute;top:8px;right:8px;font-size:10px;background:var(--cbg);color:var(--coral);border:0.5px solid var(--cbo);padding:1px 6px;border-radius:8px}
+
+/* Document lijst */
+.doc-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .1s}
+.doc-row:last-child{border:none}
+.doc-row:hover{margin:0 -16px;padding:10px 16px;background:var(--bg)}
+.doc-icon{font-size:22px;flex-shrink:0}
+.doc-info{flex:1;min-width:0}
+.doc-naam{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.doc-meta{font-size:11px;color:var(--text3);display:flex;gap:8px;flex-wrap:wrap}
+.doc-tag{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--bg2);color:var(--text3)}
+.doc-tag-alert{background:var(--cbg);color:var(--coral)}
+.doc-tag-ok{background:var(--gbg);color:var(--green)}
+.verloopt-badge{font-size:10px;color:var(--coral);font-weight:500}
+
+/* Detail */
+.detail-card{display:none}
+.detail-header{padding:16px;border-bottom:0.5px solid var(--border)}
+.detail-naam{font-size:16px;font-weight:600;margin-bottom:8px;line-height:1.4}
+.detail-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.detail-meta-item{background:var(--bg);border-radius:8px;padding:10px 12px}
+.detail-meta-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.detail-meta-val{font-size:13px;font-weight:500}
+.detail-inhoud{padding:16px;font-size:12px;font-family:'DM Mono',monospace;white-space:pre-wrap;line-height:1.8;color:var(--text2);background:var(--bg);border-top:0.5px solid var(--border);max-height:400px;overflow-y:auto}
+.detail-ai{margin:12px 16px;background:var(--pbg);border:0.5px solid var(--pbo);border-radius:10px;padding:14px}
+.detail-ai-hdr{font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px}
+.detail-acties{padding:12px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+.act-btn{font-size:12px;padding:7px 14px;border-radius:8px;border:0.5px solid var(--border2);background:var(--bg);cursor:pointer;font-family:inherit;color:var(--text2)}
+.act-btn-p{background:var(--purple);color:#fff;border-color:var(--purple)}
+.terug{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--purple);font-size:13px;cursor:pointer;font-family:inherit;padding:12px 16px;border-bottom:0.5px solid var(--border);width:100%}
+
+/* Upload zone */
+.dz{border:1.5px dashed var(--border2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:var(--bg);position:relative;transition:all .15s}
+.dz:hover{border-color:var(--purple);background:var(--pbg)}
+.dz input{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}
+
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:24px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="toby-hub.html">← Hub</a>
+  <div class="hdr-title">Documenten</div>
+</div>
+
+<div class="main">
+  <div class="search-bar">
+    <input type="search" class="search-input" id="zoek" placeholder="Zoek in documenten..." oninput="zoek(this.value)">
+    <button class="upload-btn" onclick="toggleUpload()">+ Upload</button>
+  </div>
+
+  <!-- Upload sectie -->
+  <div class="card" id="upload-sectie" style="display:none">
+    <div class="ch"><span class="ct">📤 Document uploaden</span><button onclick="toggleUpload()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px">×</button></div>
+    <div class="cb">
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:5px">Map</label>
+        <select id="upload-map" style="width:100%;background:var(--bg);border:0.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none">
+          <option>Contracten & leveranciers</option>
+          <option>Compliance & certificaten</option>
+          <option>Financiën & facturen</option>
+          <option>Personeel & HR</option>
+          <option>Installaties & onderhoud</option>
+          <option>Onboarding</option>
+        </select>
+      </div>
+      <div class="dz">
+        <input type="file" accept=".pdf,.doc,.docx,.txt,.xlsx" onchange="handleUpload(this)">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <div style="font-size:13px;font-weight:500">Klik om te uploaden</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">PDF, Word, Excel of .txt</div>
+      </div>
+      <div id="upload-status" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Mappen grid -->
+  <div id="mappen-view">
+    <div class="mappen-grid" id="mappen-grid">
+      <div class="empty"><span class="spin"></span></div>
+    </div>
+  </div>
+
+  <!-- Document lijst -->
+  <div id="lijst-view" style="display:none">
+    <button class="terug" id="terug-btn" onclick="toonMappen()">← Alle mappen</button>
+    <div class="card">
+      <div class="ch"><span class="ct" id="lijst-titel">Documenten</span><span style="font-size:11px;color:var(--text3)" id="lijst-count"></span></div>
+      <div class="cb" style="padding:0 16px"><div id="doc-lijst"></div></div>
+    </div>
+  </div>
+
+  <!-- Document detail -->
+  <div id="detail-view" style="display:none">
+    <button class="terug" id="detail-terug-btn" onclick="toonLijst()">← Terug naar map</button>
+    <div class="card" id="detail-card"></div>
+  </div>
+
+  <!-- Zoekresultaten -->
+  <div id="zoek-view" style="display:none">
+    <div class="card">
+      <div class="ch"><span class="ct" id="zoek-titel">Zoekresultaten</span></div>
+      <div class="cb" style="padding:0 16px"><div id="zoek-lijst"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="toby-widget.js"></script>
+<script>
+var SUPABASE_URL = 'https://nznsimwgjwkdvudcdmup.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ';
+var HOTEL_ID = '6a0ba674-4bfc-44d8-bfcf-0b598d05e097';
+
+var alleDocs = [];
+var huidigeMap = '';
+var sb;
+
+// Init Supabase
+var script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+script.onload = function() {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  laadDocs();
+};
+document.head.appendChild(script);
+
+async function laadDocs() {
+  var res = await sb.from('hotel_docs').select('*').eq('hotel_id', HOTEL_ID).order('mapnaam').order('naam');
+  alleDocs = res.data || [];
+  renderMappen();
+}
+
+var mapIcons = {
+  'Contracten & leveranciers': '📋',
+  'Compliance & certificaten': '✅',
+  'Financiën & facturen': '💶',
+  'Personeel & HR': '👥',
+  'Installaties & onderhoud': '🔧',
+  'Onboarding': '🆕'
+};
+
+function heeftVervaldatumAlert(docs) {
+  var nu = new Date();
+  var over60 = new Date(); over60.setDate(nu.getDate() + 60);
+  return docs.some(function(d) { return d.vervaldatum && new Date(d.vervaldatum) <= over60; });
+}
+
+function renderMappen() {
+  var mappen = {};
+  alleDocs.forEach(function(d) {
+    if (!mappen[d.mapnaam]) mappen[d.mapnaam] = [];
+    mappen[d.mapnaam].push(d);
+  });
+  var el = document.getElementById('mappen-grid');
+  el.innerHTML = Object.keys(mappen).map(function(naam) {
+    var docs = mappen[naam];
+    var alert = heeftVervaldatumAlert(docs);
+    return '<div class="map-btn" onclick="openMap(\'' + naam.replace(/'/g, "\\'") + '\')">' +
+      (alert ? '<span class="map-alert">⚠ verloopt</span>' : '') +
+      '<div class="map-icon">' + (mapIcons[naam] || '📁') + '</div>' +
+      '<div class="map-naam">' + naam + '</div>' +
+      '<div class="map-count">' + docs.length + ' documenten</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('mappen-view').style.display = 'block';
+  document.getElementById('lijst-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('zoek-view').style.display = 'none';
+}
+
+function toonMappen() { renderMappen(); }
+
+function openMap(mapnaam) {
+  huidigeMap = mapnaam;
+  toonLijst();
+}
+
+function toonLijst() {
+  var docs = alleDocs.filter(function(d) { return d.mapnaam === huidigeMap; });
+  document.getElementById('lijst-titel').textContent = (mapIcons[huidigeMap] || '📁') + ' ' + huidigeMap;
+  document.getElementById('lijst-count').textContent = docs.length + ' documenten';
+  document.getElementById('doc-lijst').innerHTML = docs.map(function(d) { return docRowHtml(d); }).join('');
+  document.getElementById('mappen-view').style.display = 'none';
+  document.getElementById('lijst-view').style.display = 'block';
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('zoek-view').style.display = 'none';
+  document.getElementById('lijst-view').querySelectorAll('.doc-row').forEach(function(row) {
+    row.addEventListener('click', function() { openDoc(row.dataset.id); });
+  });
+}
+
+function docRowHtml(d) {
+  var nu = new Date();
+  var verloopt = d.vervaldatum ? new Date(d.vervaldatum) : null;
+  var over30 = new Date(); over30.setDate(nu.getDate() + 30);
+  var over60 = new Date(); over60.setDate(nu.getDate() + 60);
+  var verlopen = verloopt && verloopt < nu;
+  var bijna = verloopt && verloopt >= nu && verloopt <= over60;
+  var icon = d.type === 'pdf' ? '📄' : d.type === 'xlsx' ? '📊' : '📝';
+  var datumStr = d.datum ? new Date(d.datum).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'}) : '';
+  var vervaldatumStr = verloopt ? new Date(d.vervaldatum).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'}) : '';
+  return '<div class="doc-row" data-id="' + d.id + '">' +
+    '<div class="doc-icon">' + icon + '</div>' +
+    '<div class="doc-info">' +
+      '<div class="doc-naam">' + d.naam + '</div>' +
+      '<div class="doc-meta">' +
+        (datumStr ? '<span>' + datumStr + '</span>' : '') +
+        (d.grootte ? '<span>' + d.grootte + '</span>' : '') +
+        (verlopen ? '<span class="verloopt-badge">🔴 Verlopen</span>' : '') +
+        (bijna ? '<span class="verloopt-badge">⚠ Verloopt ' + vervaldatumStr + '</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">' +
+        (d.tags || []).map(function(t) { return '<span class="doc-tag">' + t + '</span>'; }).join('') +
+      '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+function openDoc(id) {
+  var doc = alleDocs.find(function(d) { return d.id === id; });
+  if (!doc) return;
+  var nu = new Date();
+  var verloopt = doc.vervaldatum ? new Date(doc.vervaldatum) : null;
+  var verlopen = verloopt && verloopt < nu;
+  var over60 = new Date(); over60.setDate(nu.getDate() + 60);
+  var bijna = verloopt && verloopt >= nu && verloopt <= over60;
+  var statusKleur = verlopen ? 'var(--coral)' : bijna ? 'var(--amber)' : 'var(--green)';
+  var statusTekst = verlopen ? '🔴 Verlopen' : bijna ? '⚠ Verloopt binnenkort' : verloopt ? '✅ Geldig' : '—';
+
+  document.getElementById('detail-card').innerHTML =
+    '<div class="detail-header">' +
+      '<div class="detail-naam">' + doc.naam + '</div>' +
+      '<div class="detail-meta-grid">' +
+        '<div class="detail-meta-item"><div class="detail-meta-lbl">Map</div><div class="detail-meta-val">' + doc.mapnaam + '</div></div>' +
+        '<div class="detail-meta-item"><div class="detail-meta-lbl">Type</div><div class="detail-meta-val">' + doc.type.toUpperCase() + ' · ' + (doc.grootte || '—') + '</div></div>' +
+        '<div class="detail-meta-item"><div class="detail-meta-lbl">Datum</div><div class="detail-meta-val">' + (doc.datum ? new Date(doc.datum).toLocaleDateString('nl-NL') : '—') + '</div></div>' +
+        '<div class="detail-meta-item"><div class="detail-meta-lbl">Vervaldatum</div><div class="detail-meta-val" style="color:' + statusKleur + '">' + (doc.vervaldatum ? new Date(doc.vervaldatum).toLocaleDateString('nl-NL') + ' ' + statusTekst : '—') + '</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">' + (doc.tags || []).map(function(t) { return '<span class="doc-tag">' + t + '</span>'; }).join('') + '</div>' +
+    '</div>' +
+    '<div class="detail-ai">' +
+      '<div class="detail-ai-hdr">✨ Toby samenvatting</div>' +
+      '<div style="font-size:12px;color:var(--text2);line-height:1.7">' + (doc.inhoud ? doc.inhoud.substring(0, 300) + (doc.inhoud.length > 300 ? '...' : '') : 'Geen samenvatting beschikbaar.') + '</div>' +
+    '</div>' +
+    (doc.inhoud ? '<div class="detail-inhoud">' + doc.inhoud + '</div>' : '') +
+    '<div class="detail-acties">' +
+      '<button class="act-btn act-btn-p">⬇️ Downloaden</button>' +
+      '<button class="act-btn">📋 Kopieer inhoud</button>' +
+      (verlopen || bijna ? '<button class="act-btn" style="color:var(--coral);border-color:var(--cbo)">🔄 Vernieuwen</button>' : '') +
+    '</div>';
+
+  document.getElementById('mappen-view').style.display = 'none';
+  document.getElementById('lijst-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  document.getElementById('zoek-view').style.display = 'none';
+}
+
+function zoek(term) {
+  if (!term || term.length < 2) {
+    document.getElementById('zoek-view').style.display = 'none';
+    if (huidigeMap) {
+      document.getElementById('lijst-view').style.display = 'block';
+    } else {
+      document.getElementById('mappen-view').style.display = 'block';
+    }
+    return;
+  }
+  var t = term.toLowerCase();
+  var gevonden = alleDocs.filter(function(d) {
+    return d.naam.toLowerCase().includes(t) ||
+      (d.inhoud && d.inhoud.toLowerCase().includes(t)) ||
+      (d.tags && d.tags.some(function(tag) { return tag.includes(t); })) ||
+      d.mapnaam.toLowerCase().includes(t);
+  });
+  document.getElementById('zoek-titel').textContent = gevonden.length + ' resultaten voor "' + term + '"';
+  var el = document.getElementById('zoek-lijst');
+  el.innerHTML = gevonden.length === 0 ? '<div class="empty">Niets gevonden</div>' :
+    gevonden.map(function(d) {
+      return '<div class="doc-row" data-id="' + d.id + '" style="cursor:pointer">' +
+        '<div class="doc-icon">📄</div>' +
+        '<div class="doc-info">' +
+          '<div class="doc-naam">' + d.naam + '</div>' +
+          '<div class="doc-meta"><span style="color:var(--purple)">' + d.mapnaam + '</span>' + (d.grootte ? ' · ' + d.grootte : '') + '</div>' +
+        '</div></div>';
+    }).join('');
+  el.querySelectorAll('.doc-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      huidigeMap = alleDocs.find(function(d) { return d.id === row.dataset.id; }).mapnaam;
+      openDoc(row.dataset.id);
+    });
+  });
+  document.getElementById('mappen-view').style.display = 'none';
+  document.getElementById('lijst-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'none';
+  document.getElementById('zoek-view').style.display = 'block';
+}
+
+function toggleUpload() {
+  var el = document.getElementById('upload-sectie');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function handleUpload(input) {
+  var file = input.files[0]; if (!file) return;
+  var mapnaam = document.getElementById('upload-map').value;
+  var status = document.getElementById('upload-status');
+  status.style.display = 'block';
+  status.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0"><span class="spin"></span> Toby verwerkt het document...</div>';
+
+  var k = localStorage.getItem('toby_anthropic_key');
+  if (k) {
+    try {
+      var tekst = await file.text();
+      var res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:'Geef een korte samenvatting (max 3 zinnen) van dit document en identificeer het type (contract/factuur/certificaat/rapport/overig) en eventuele vervaldatum. Document:\n\n' + tekst.substring(0, 3000)}]})
+      });
+      var data = await res.json();
+      var samenvatting = data.content[0].text;
+      await sb.from('hotel_docs').insert({hotel_id: HOTEL_ID, mapnaam: mapnaam, naam: file.name, type: file.name.split('.').pop(), grootte: Math.round(file.size/1024) + ' KB', datum: new Date().toISOString().substring(0,10), inhoud: samenvatting});
+      status.innerHTML = '<div style="font-size:12px;color:var(--green);padding:8px 0">✅ Document opgeslagen in ' + mapnaam + '</div>';
+      await laadDocs();
+    } catch(e) {
+      status.innerHTML = '<div style="font-size:12px;color:var(--coral);padding:8px 0">Fout: ' + e.message + '</div>';
+    }
+  } else {
+    await sb.from('hotel_docs').insert({hotel_id: HOTEL_ID, mapnaam: mapnaam, naam: file.name, type: file.name.split('.').pop(), grootte: Math.round(file.size/1024) + ' KB', datum: new Date().toISOString().substring(0,10)});
+    status.innerHTML = '<div style="font-size:12px;color:var(--green);padding:8px 0">✅ Opgeslagen (geen AI analyse — API key niet ingesteld)</div>';
+    await laadDocs();
+  }
+}
+</script>
+</body>
+</html>
