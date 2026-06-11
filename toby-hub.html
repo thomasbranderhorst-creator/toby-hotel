@@ -911,8 +911,12 @@ async function laadNieuws() {
   }
 }
 
-laadWeer();
-laadNieuws();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { laadWeer(); laadNieuws(); });
+} else {
+  laadWeer();
+  laadNieuws();
+}
 
 // ── AUTO SYNC ──
 async function autoSync() {
