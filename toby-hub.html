@@ -948,7 +948,7 @@ function renderLosseLevs() {
     return;
   }
   el.innerHTML = losseLevs.slice(0, 5).map(function(l) {
-    return '<div class="hub-row" style="cursor:pointer" onclick="belLev('' + (l.tel || '') + '')">' +
+    return '<div class="hub-row" style="cursor:pointer" onclick="if(this.dataset.tel)window.location.href='tel:'+this.dataset.tel" data-tel="'+( l.tel||'')+'">' +
       '<div class="hub-row-naam">' + l.naam + '<span style="font-size:11px;color:var(--text3);margin-left:6px">' + (l.rol || '') + '</span></div>' +
       (l.tel ? '<div style="font-size:11px;color:var(--purple);font-family:monospace">📞 ' + l.tel + '</div>' : '') +
       '</div>';
