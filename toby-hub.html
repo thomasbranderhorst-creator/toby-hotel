@@ -251,6 +251,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
     <div class="s-pill s-pill-gray"><div class="dot"></div>Laden...</div>
   </div>
 
+  <!-- Weer + Nieuws banner -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <!-- Weer -->
+    <div class="hub-card" style="margin-bottom:0">
+      <div class="hub-card-header">
+        <div class="hub-card-title" id="weer-stad">🌤️ Weer</div>
+      </div>
+      <div style="padding:12px 16px" id="weer-inhoud">
+        <div style="font-size:11px;color:var(--text3)">Laden...</div>
+      </div>
+    </div>
+    <!-- Nieuws -->
+    <div class="hub-card" style="margin-bottom:0">
+      <div class="hub-card-header">
+        <div class="hub-card-title">📰 Hotelsector top nieuws</div>
+        <a href="toby-nieuws.html" class="hub-card-link">Meer →</a>
+      </div>
+      <div style="padding:8px 16px" id="nieuws-inhoud">
+        <div style="font-size:11px;color:var(--text3)">Laden...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="mews-sync-bar">
     <button class="sync-btn" id="mews-sync-btn" onclick="mewsSync()">
       <span class="sync-icon">🔁</span> Mews sync
@@ -353,29 +376,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
       <button class="toby-ai-btn" id="toby-ai-btn">Vraag Toby</button>
     </div>
     <div class="toby-ai-antwoord" id="vera-antwoord"></div>
-  </div>
-
-  <!-- Weer + Nieuws banner -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-    <!-- Weer -->
-    <div class="hub-card" style="margin-bottom:0">
-      <div class="hub-card-header">
-        <div class="hub-card-title" id="weer-stad">🌤️ Weer</div>
-      </div>
-      <div style="padding:12px 16px" id="weer-inhoud">
-        <div style="font-size:11px;color:var(--text3)">Laden...</div>
-      </div>
-    </div>
-    <!-- Nieuws -->
-    <div class="hub-card" style="margin-bottom:0">
-      <div class="hub-card-header">
-        <div class="hub-card-title">📰 Hotelsector</div>
-        <a href="toby-nieuws.html" class="hub-card-link">Meer →</a>
-      </div>
-      <div style="padding:8px 16px" id="nieuws-inhoud">
-        <div style="font-size:11px;color:var(--text3)">Laden...</div>
-      </div>
-    </div>
   </div>
 
   <div class="hub-card" style="margin-bottom:12px">
