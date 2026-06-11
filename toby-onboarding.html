@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toby — Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f1ec;--card:#fff;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1a1814;--text2:#5a5650;--text3:#8a8680;
+  --purple:#6355e0;--pbg:rgba(99,85,224,0.08);--pbo:rgba(99,85,224,0.25);
+  --green:#1a8c5a;--gbg:rgba(26,140,90,0.08);--gbo:rgba(26,140,90,0.25);
+  --amber:#c47c0a;--abg:rgba(196,124,10,0.08);--abo:rgba(196,124,10,0.25);
+  --sh:0 1px 4px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.06);
+}
+body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);min-height:100vh}
+.hdr{padding:14px 20px;display:flex;align-items:center;gap:10px;background:var(--card);border-bottom:0.5px solid var(--border2)}
+.hdr a{font-size:13px;color:var(--purple);text-decoration:none}
+.hdr-title{font-size:15px;font-weight:600;flex:1}
+.main{padding:24px 16px;max-width:560px;margin:0 auto}
+.intro{margin-bottom:28px}
+.intro h1{font-size:22px;font-weight:500;margin-bottom:8px;letter-spacing:-0.02em}
+.intro p{font-size:14px;color:var(--text2);line-height:1.7}
+
+.stap{background:var(--card);border-radius:14px;box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s;text-decoration:none;display:block;color:inherit}
+.stap:hover{box-shadow:0 4px 16px rgba(0,0,0,0.12)}
+.stap-inner{display:flex;align-items:center;gap:16px;padding:18px 20px}
+.stap-icon{font-size:32px;flex-shrink:0}
+.stap-body{flex:1}
+.stap-titel{font-size:15px;font-weight:600;margin-bottom:3px}
+.stap-sub{font-size:12px;color:var(--text2);line-height:1.5}
+.stap-pijl{font-size:18px;color:var(--text3);flex-shrink:0}
+.stap-tag{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+.tag-klaar{background:var(--gbg);color:var(--green);border:0.5px solid var(--gbo)}
+.tag-later{background:rgba(0,0,0,0.04);color:var(--text3);border:0.5px solid var(--border2)}
+
+.skip{display:block;text-align:center;margin-top:20px;font-size:13px;color:var(--text3);cursor:pointer;text-decoration:none}
+.skip:hover{color:var(--purple)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="toby-hub.html">← Hub</a>
+  <div class="hdr-title">Onboarding</div>
+</div>
+
+<div class="main">
+  <div class="intro">
+    <h1>Welkom bij Toby 👋</h1>
+    <p>Zet je hotel op in een paar stappen. Je kunt stappen overslaan en later terugkomen.</p>
+  </div>
+
+  <a class="stap" href="toby-docs.html?onboarding=1">
+    <div class="stap-inner">
+      <div class="stap-icon">📂</div>
+      <div class="stap-body">
+        <div class="stap-titel">Documenten koppelen</div>
+        <div class="stap-sub">Koppel een Google Drive map met contracten, certificaten en facturen. Documenten blijven bij jou — Toby leest alleen mee.</div>
+      </div>
+      <div class="stap-pijl">→</div>
+    </div>
+  </a>
+
+  <a class="stap" href="toby-hk.html?tab=instellingen">
+    <div class="stap-inner">
+      <div class="stap-icon">🧹</div>
+      <div class="stap-body">
+        <div class="stap-titel">HK checklist uploaden</div>
+        <div class="stap-sub">Upload je standaard housekeeping checklist. Toby maakt er een digitaal inspectieformulier van.</div>
+      </div>
+      <div class="stap-pijl">→</div>
+    </div>
+  </a>
+
+  <a class="stap" href="toby-voorraad.html?tab=leveranciers">
+    <div class="stap-inner">
+      <div class="stap-icon">💶</div>
+      <div class="stap-body">
+        <div class="stap-titel">Prijslijsten & leveranciers</div>
+        <div class="stap-sub">Voeg je leveranciers toe en upload hun prijslijsten. Toby vult de voorraadcatalogus automatisch in.</div>
+      </div>
+      <div class="stap-pijl">→</div>
+    </div>
+  </a>
+
+  <a class="stap" href="toby-hub.html#sync">
+    <div class="stap-inner">
+      <div class="stap-icon">🔗</div>
+      <div class="stap-body">
+        <div class="stap-titel">Systemen synchroniseren</div>
+        <div class="stap-sub">Sync Mews voor bezetting en revenue. Exact Online voor financiën en GOP. <span class="stap-tag tag-later">Revinate binnenkort</span></div>
+      </div>
+      <div class="stap-pijl">→</div>
+    </div>
+  </a>
+
+  <a class="skip" href="toby-hub.html">Overslaan — ik doe dit later</a>
+</div>
+
+</body>
+</html>
