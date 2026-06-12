@@ -284,7 +284,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <script>
 const { createClient } = supabase;
 const sb = createClient('https://nznsimwgjwkdvudcdmup.supabase.co', 'sb_publishable_yOUd6ZQRGxfUr-Yc9dDoDg_Rzwx1muZ');
-const HOTEL_ID = '6a0ba674-4bfc-44d8-bfcf-0b598d05e097';
+const HOTEL_ID = localStorage.getItem('toby_hotel_id') || 'b1f2e3a4-1234-4abc-8def-9a8b7c6d5e4f';
 const DAGEN = ['zo','ma','di','wo','do','vr','za'];
 let otbData = [], uitgavenData = [], exactMtd = null;
 
