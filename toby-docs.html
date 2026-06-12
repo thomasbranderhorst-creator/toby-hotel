@@ -109,6 +109,7 @@ body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:v
       <div style="font-size:13px;font-weight:600;color:var(--green)">Google Drive gekoppeld</div>
       <div style="font-size:12px;color:var(--text2)" id="drive-map-naam">Map geladen</div>
     </div>
+    <button onclick="analyseerTobyMap()" id="analyse-btn" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">✨ Analyseer Toby-map</button>
     <button onclick="herlaadDrive()" style="background:none;border:0.5px solid var(--gbo);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--green)">↻ Verversen</button>
     <button onclick="ontkoppelDrive()" style="background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;font-family:inherit">Loskoppelen</button>
   </div>
@@ -393,6 +394,80 @@ async function handleUpload(input) {
     status.innerHTML = '<div style="font-size:12px;color:var(--green);padding:8px 0">✅ Opgeslagen (geen AI analyse — API key niet ingesteld)</div>';
     await laadDocs();
   }
+}
+
+// ── ANALYSEER TOBY-MAP ──
+var COMPLIANCE_CATEGORIEEN = {
+  'legionella': 'Legionella beheersplan of spoellogboek',
+  'brand': 'Brandveiligheid, ontruiming, BHV gerelateerd',
+  'haccp': 'HACCP, voedselveiligheid, temperatuurregistratie',
+  'vergunning': 'Exploitatie- of horecavergunning',
+  'rie': 'RI&E, risico inventarisatie arbeid',
+  'installatie': 'Lift- of CV-keuring, onderhoud installaties',
+  'energie': 'Energiebesparing, energielabel',
+  'bhv': 'BHV certificaten personeel'
+};
+
+async function analyseerTobyMap() {
+  var k = localStorage.getItem('toby_anthropic_key');
+  if (!k) { alert('Stel eerst een Anthropic API key in via de instellingen om documenten te laten analyseren.'); return; }
+
+  var btn = document.getElementById('analyse-btn');
+  btn.textContent = '✨ Analyseren...';
+  btn.disabled = true;
+
+  var docsRes = await sb.from('hotel_docs').select('*').eq('hotel_id', HOTEL_ID).contains('tags', ['drive']);
+  var docs = docsRes.data || [];
+
+  var compRes = await sb.from('compliance_items').select('*').eq('hotel_id', HOTEL_ID);
+  var compItems = compRes.data || [];
+
+  var verwerkt = 0, gekoppeld = 0;
+
+  for (var i = 0; i < docs.length; i++) {
+    var doc = docs[i];
+    if (doc.tags && doc.tags.indexOf('geanalyseerd') !== -1) { verwerkt++; continue; }
+
+    try {
+      var res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{role:'user', content: 'Bestandsnaam: "' + doc.naam + '"\n\nWelke compliance categorie past hierbij? Kies uit: legionella, brand, haccp, vergunning, rie, installatie, energie, bhv, of "geen" als niets past.\nAntwoord met alleen JSON: {"categorie":"...","jaar_in_naam":"jjjj of null"}'}]
+        })
+      });
+      var data = await res.json();
+      var tekst = data.content[0].text;
+      var json = JSON.parse(tekst.match(/\{[\s\S]*\}/)[0]);
+
+      if (json.categorie && json.categorie !== 'geen') {
+        var match = compItems.find(function(c) { return c.categorie === json.categorie && c.status === 'geen_document'; });
+        if (match) {
+          var vervaldatum = null;
+          if (json.jaar_in_naam) {
+            vervaldatum = (parseInt(json.jaar_in_naam) + 1) + '-12-31';
+          }
+          await sb.from('compliance_items').update({
+            status: 'groen',
+            vervaldatum: vervaldatum,
+            notities: 'Gekoppeld aan: ' + doc.naam
+          }).eq('id', match.id);
+          match.status = 'groen';
+          gekoppeld++;
+        }
+      }
+
+      await sb.from('hotel_docs').update({ tags: (doc.tags||[]).concat(['geanalyseerd']) }).eq('id', doc.id);
+      verwerkt++;
+    } catch(e) {
+      console.error('Fout bij analyseren ' + doc.naam, e);
+    }
+  }
+
+  btn.textContent = '✅ ' + gekoppeld + ' gekoppeld';
+  setTimeout(function() { btn.textContent = '✨ Analyseer Toby-map'; btn.disabled = false; }, 3000);
 }
 
 // ── GOOGLE DRIVE ──
