@@ -413,8 +413,18 @@ async function analyseerTobyMap() {
   if (!k) { alert('Stel eerst een Anthropic API key in via de instellingen om documenten te laten analyseren.'); return; }
 
   var btn = document.getElementById('analyse-btn');
-  btn.textContent = '✨ Analyseren...';
   btn.disabled = true;
+
+  // Voortgang/resultaat panel
+  var panel = document.getElementById('analyse-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'analyse-panel';
+    panel.style.cssText = 'background:var(--pbg);border:1px solid var(--pbo);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px';
+    document.getElementById('drive-status').parentNode.insertBefore(panel, document.getElementById('drive-status').nextSibling);
+  }
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="font-weight:600;color:var(--purple);margin-bottom:4px">✨ Toby analyseert je documenten...</div><div id="analyse-progress" style="color:var(--text2)">Starten...</div>';
 
   var docsRes = await sb.from('hotel_docs').select('*').eq('hotel_id', HOTEL_ID).contains('tags', ['drive']);
   var docs = docsRes.data || [];
@@ -424,8 +434,11 @@ async function analyseerTobyMap() {
 
   var verwerkt = 0, gekoppeld = 0;
 
+  var koppelingen = [];
+
   for (var i = 0; i < docs.length; i++) {
     var doc = docs[i];
+    document.getElementById('analyse-progress').textContent = 'Document ' + (i+1) + ' van ' + docs.length + ': ' + doc.naam.substring(0,50);
     if (doc.tags && doc.tags.indexOf('geanalyseerd') !== -1) { verwerkt++; continue; }
 
     try {
@@ -456,6 +469,7 @@ async function analyseerTobyMap() {
           }).eq('id', match.id);
           match.status = 'groen';
           gekoppeld++;
+          koppelingen.push({ item: match.naam, doc: doc.naam, vervaldatum: vervaldatum });
         }
       }
 
@@ -466,8 +480,19 @@ async function analyseerTobyMap() {
     }
   }
 
-  btn.textContent = '✅ ' + gekoppeld + ' gekoppeld';
-  setTimeout(function() { btn.textContent = '✨ Analyseer Toby-map'; btn.disabled = false; }, 3000);
+  document.getElementById('analyse-progress').innerHTML =
+    '<div style="font-weight:600;color:var(--green);margin-top:6px">✅ Klaar — ' + verwerkt + ' documenten verwerkt, ' + gekoppeld + ' nieuw gekoppeld</div>' +
+    (koppelingen.length > 0 ?
+      koppelingen.map(function(k) {
+        return '<div style="padding:6px 0;border-top:0.5px solid var(--pbo);font-size:12px">' +
+          '<span style="font-weight:500">' + k.item + '</span> ← ' + k.doc +
+          (k.vervaldatum ? '<span style="color:var(--text3)"> · geldig tot ' + k.vervaldatum + '</span>' : '') +
+          '</div>';
+      }).join('')
+      : '<div style="color:var(--text3);margin-top:4px">Geen nieuwe koppelingen gevonden — alles was al verwerkt of er was geen match.</div>');
+
+  btn.disabled = false;
+  await laadDocs();
 }
 
 // ── GOOGLE DRIVE ──
