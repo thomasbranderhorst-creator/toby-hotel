@@ -472,7 +472,8 @@ async function kiesMapInDrive() {
       keuze += '<div class="drive-map-opt" data-id="' + m.id + '" data-naam="' + m.name.replace(/"/g,'&quot;') + '" style="padding:10px 12px;border-radius:8px;border:0.5px solid var(--border2);margin-bottom:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;background:var(--bg)"><span>\ud83d\udcc1</span><span>' + m.name + '</span></div>';
 
     });
-    keuze += '<button onclick="document.getElementById('drive-picker').remove()" style="width:100%;margin-top:8px;background:none;border:0.5px solid var(--border2);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text3)">Annuleren</button></div>';
+    keuze += '<button class="drive-cancel-btn" style="width:100%;margin-top:8px;background:none;border:0.5px solid var(--border2);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--text3)">Annuleren</button></div>';
+
 
     var picker = document.createElement('div');
     picker.id = 'drive-picker';
@@ -484,6 +485,8 @@ async function kiesMapInDrive() {
       el.addEventListener('mouseout', function(){el.style.background='var(--bg)';});
       el.addEventListener('click', function(){ selecteerDriveMap(el.dataset.id, el.dataset.naam); });
     });
+    var cancelBtn = picker.querySelector('.drive-cancel-btn');
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ picker.remove(); });
   } catch(e) {
     alert('Fout bij ophalen mappen: ' + e.message);
     document.getElementById('drive-btn').textContent = 'Koppelen →';
