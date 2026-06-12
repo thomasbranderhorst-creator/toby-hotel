@@ -799,7 +799,7 @@ async function mewsSync() {
   status.textContent = '';
   var t0 = Date.now();
   try {
-    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/mews-sync?type=all');
+    var res = await fetch('https://nznsimwgjwkdvudcdmup.supabase.co/functions/v1/mews-sync?type=all&hotel_id=' + HOTEL_ID);
     var data = await res.json();
     var ms = Date.now() - t0;
     if (data.success) {
